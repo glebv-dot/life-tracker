@@ -1168,6 +1168,13 @@ function renderHistory(){
 
 fwRenderList();
 renderXPBar();
+  // Supabase Sync
+  (function(){var S='https://vgurpottnlcixzjmatlz.supabase.co',K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZndXJwb3R0bmxjaXh6am1hdGx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDc2MTMsImV4cCI6MjA5NDc4MzYxM30.60bgWxj79Md4eNZYrfnYEQgUNjQr4SJEK27QcTsoRr0',TN='life_tracker_data',U='default';
+              function hdr(){return{'apikey':K,'Authorization':'Bearer '+K,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'};}
+              function push(k,v){fetch(S+'/rest/v1/'+TN,{method:'POST',headers:hdr(),body:JSON.stringify({user_id:U,data_key:k,data_value:v,updated_at:new Date().toISOString()})}).catch(function(){});}
+              var _lss=window.LSS;window.LSS=function(k,v){if(_lss)_lss.call(this,k,v);push(k,v);};
+              window.addEventListener('load',function(){fetch(S+'/rest/v1/'+TN+'?user_id=eq.'+U+'&select=data_key,data_value',{headers:hdr()}).then(function(r){return r.json();}).then(function(rows){if(!Array.isArray(rows))return;rows.forEach(function(r){if(r.data_key)try{localStorage.setItem(r.data_key,JSON.stringify(r.data_value));}catch(e){}});try{goals=LS('lt2_goals')||[];habits=LS('lt2_habits')||habits;timers=LS('lt2_timers')||{};history=LS('lt2_history')||[];woops=LS('lt2_woops')||[];sprintDur=LS('lt2_dur')||5;if(typeof fwRenderList==='function')fwRenderList();if(typeof renderXPBar==='function')renderXPBar();}catch(e){}}).catch(function(){});});
+             })();
 </script>
 </body>
 </html>
