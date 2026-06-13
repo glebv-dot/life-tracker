@@ -377,6 +377,16 @@ textarea.inp{resize:none;line-height:1.6}
       <div class="card-label">Pin mode</div>
       <div id="wheel-pin-list"></div>
     </div>
+    <div class="card">
+      <div class="card-label" style="justify-content:space-between;margin-bottom:10px">
+        <span>Custom Table</span>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-green btn-xs" onclick="wheelTableAddCol()">+ Col</button>
+          <button class="btn btn-green btn-xs" onclick="wheelTableAddRow()">+ Row</button>
+        </div>
+      </div>
+      <div id="wheel-table-wrap" style="overflow-x:auto"></div>
+    </div>
   </div>
 </div>
 
@@ -569,7 +579,7 @@ function switchTab(t){
   if(t==='habits'){renderHabits();renderHeatmap();renderCompound();}
   if(t==='history'){renderCalendar();renderHistory();}
   if(t==='fw')fwRenderList();
-  if(t==='wheel'){wheelDrawStatic();wheelRenderPins();}
+  if(t==='wheel'){wheelDrawStatic();wheelRenderPins();wheelTableRender();}
 }
 
 // ‚îÄ‚îÄ GANTT / TIMELINE ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
@@ -1225,11 +1235,11 @@ function renderHistory(){
 
 // ‚îÄ‚îÄ WHEEL ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
 const WHEEL_ALL=[
-  {name:'T1',color:'#f5d020',textColor:'#5a4a00',weight:40,reward:'üì± Phone for 10 min'},
-  {name:'T2',color:'#4a90d9',textColor:'#ffffff',weight:30,reward:'üç´ Favourite snack'},
-  {name:'T3',color:'#5aaf78',textColor:'#ffffff',weight:20,reward:'üé¨ Movie / YouTube night'},
-  {name:'T4',color:'#e05555',textColor:'#ffffff',weight:8, reward:'‚òï Coffee + dessert / Shopping'},
-  {name:'T5',color:'#d4a017',textColor:'#ffffff',weight:2, reward:'üéÅ Big purchase / Nice weekend'},
+  {name:'T1',color:'#f5d020',textColor:'#5a4a00',weight:40,reward:'Phone for 10 min'},
+  {name:'T2',color:'#4a90d9',textColor:'#ffffff',weight:30,reward:'Favourite snack'},
+  {name:'T3',color:'#5aaf78',textColor:'#ffffff',weight:20,reward:'Movie / YouTube night'},
+  {name:'T4',color:'#e05555',textColor:'#ffffff',weight:8, reward:'Coffee + dessert / Shopping'},
+  {name:'T5',color:'#d4a017',textColor:'#ffffff',weight:2, reward:'Big purchase / Nice weekend'},
 ];
 const WHEEL_PINS=[
   {id:'yellow',label:'Yellow pin',pinColor:'#f5d020',pinBorder:'#b09800',eligible:['T1'],desc:'Only T1 available'},
@@ -1346,7 +1356,7 @@ function wheelRenderPins(){
           ${eligibleSegs.map(s=>`<div style="display:flex;align-items:center;gap:8px">
             <div style="width:9px;height:9px;border-radius:50%;background:${s.color};flex-shrink:0"></div>
             <span style="font-size:12px;color:var(--text2);font-weight:500">${s.name}</span>
-            <span style="font-size:11px;color:var(--text3)">‚Äî</span>
+            
             <span style="font-size:12px;color:var(--text2)">${s.reward}</span>
           </div>`).join('')}
         </div>
@@ -1357,6 +1367,67 @@ function wheelRenderPins(){
 
 fwRenderList();
 renderXPBar();
+
+// == WHEEL CUSTOM TABLE ==
+function wheelTableLoad(){return LS('lt2_wheel_table')||{cols:['Column 1','Column 2'],rows:[['',''],['','']]};}
+function wheelTableSave(t){LSS('lt2_wheel_table',t);}
+function wheelTableAddCol(){
+  const t=wheelTableLoad();
+  t.cols.push('Column '+(t.cols.length+1));
+  t.rows=t.rows.map(r=>[...r,'']);
+  wheelTableSave(t);wheelTableRender();
+}
+function wheelTableRemoveCol(i){
+  const t=wheelTableLoad();
+  if(t.cols.length<=1)return;
+  t.cols.splice(i,1);
+  t.rows=t.rows.map(r=>{r.splice(i,1);return r;});
+  wheelTableSave(t);wheelTableRender();
+}
+function wheelTableAddRow(){
+  const t=wheelTableLoad();
+  t.rows.push(new Array(t.cols.length).fill(''));
+  wheelTableSave(t);wheelTableRender();
+}
+function wheelTableRemoveRow(i){
+  const t=wheelTableLoad();
+  if(t.rows.length<=1)return;
+  t.rows.splice(i,1);
+  wheelTableSave(t);wheelTableRender();
+}
+function wheelTableEditCol(i,val){
+  const t=wheelTableLoad();t.cols[i]=val;wheelTableSave(t);
+}
+function wheelTableEditCell(r,c,val){
+  const t=wheelTableLoad();t.rows[r][c]=val;wheelTableSave(t);
+}
+function wheelTableRender(){
+  const wrap=document.getElementById('wheel-table-wrap');if(!wrap)return;
+  const t=wheelTableLoad();
+  const thStyle='padding:7px 10px;font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;position:relative';
+  const tdStyle='padding:6px 8px;font-size:13px;color:var(--text);border-top:1px solid var(--border)';
+  const inpBase='font-family:var(--font);background:transparent;border:none;outline:none;width:100%;min-width:60px;color:inherit;font-size:inherit;font-weight:inherit';
+  let h='<table style="width:100%;border-collapse:collapse"><thead><tr>';
+  t.cols.forEach((col,i)=>{
+    h+=`<th style="${thStyle}">
+      <input style="${inpBase};font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text3)" value="${esc(col)}"
+        oninput="wheelTableEditCol(${i},this.value)"
+        placeholder="Header">
+      ${t.cols.length>1?`<button onclick="wheelTableRemoveCol(${i})" style="position:absolute;top:2px;right:2px;background:none;border:none;cursor:pointer;color:var(--text4);font-size:10px;line-height:1;padding:1px 3px" title="Remove column">x</button>`:''}
+    </th>`;
+  });
+  h+='<th style="width:28px"></th></tr></thead><tbody>';
+  t.rows.forEach((row,ri)=>{
+    h+=`<tr>`;
+    row.forEach((cell,ci)=>{
+      h+=`<td style="${tdStyle}"><input style="${inpBase}" value="${esc(cell)}" oninput="wheelTableEditCell(${ri},${ci},this.value)" placeholder="-"></td>`;
+    });
+    h+=`<td style="${tdStyle};text-align:center">${t.rows.length>1?`<button onclick="wheelTableRemoveRow(${ri})" style="background:none;border:none;cursor:pointer;color:var(--text4);font-size:11px;line-height:1;padding:2px" title="Remove row">x</button>`:''}</td>`;
+    h+=`</tr>`;
+  });
+  h+='</tbody></table>';
+  wrap.innerHTML=h;
+}
   // Supabase Sync
   (function(){var S='https://vgurpottnlcixzjmatlz.supabase.co',K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZndXJwb3R0bmxjaXh6am1hdGx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDc2MTMsImV4cCI6MjA5NDc4MzYxM30.60bgWxj79Md4eNZYrfnYEQgUNjQr4SJEK27QcTsoRr0',TN='life_tracker_data',U='default';
               function hdr(){return{'apikey':K,'Authorization':'Bearer '+K,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'};}
