@@ -256,6 +256,23 @@ textarea.inp{resize:none;line-height:1.6}
 .wheel-pin-row{display:flex;align-items:flex-start;gap:14px;padding:14px;border-radius:var(--radius-sm);cursor:pointer;transition:background .12s;margin-bottom:4px}
 .wheel-pin-row:hover{background:var(--bg2)}
 .wheel-pin-row.on{background:var(--accent-dim);outline:1.5px solid var(--accent-mid);border-radius:var(--radius-sm)}
+
+/* BOREDOM */
+.bp-phase{background:var(--bg1);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:12px;box-shadow:0 2px 12px var(--shadow)}
+.bp-phase.locked{opacity:.5}
+.bp-phase-head{display:flex;align-items:center;gap:10px;cursor:pointer}
+.bp-phase-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:var(--radius-pill);flex-shrink:0;font-family:var(--mono)}
+.bp-phase-title{font-size:15px;font-weight:600;color:var(--text);flex:1}
+.bp-phase-dur{font-size:10px;color:var(--text3);font-family:var(--mono)}
+.bp-phase-goal{font-size:12px;color:var(--text2);line-height:1.6;margin:8px 0 10px}
+.bp-rule{display:flex;gap:8px;padding:7px 0;border-top:1px solid var(--border);font-size:13px;color:var(--text);line-height:1.5}
+.bp-rule:first-of-type{border-top:none}
+.bp-log-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.bp-log-row:last-child{border-bottom:none}
+.bp-trig-pill{font-size:11px;font-weight:600;padding:3px 10px;border-radius:var(--radius-pill);background:var(--bg2);color:var(--text2);flex-shrink:0}
+.bp-sit-circle{position:relative;width:120px;height:120px;margin:0 auto}
+.bp-sit-circle svg{transform:rotate(-90deg)}
+.bp-sit-num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
 </style>
 </head>
 <body>
@@ -390,6 +407,66 @@ textarea.inp{resize:none;line-height:1.6}
   </div>
 </div>
 
+<!-- BOREDOM TAB -->
+<div class="tab" id="tab-boredom">
+  <div class="page-header">
+    <div class="hud-scan"></div>
+    <div class="page-title">Boredom</div>
+  </div>
+  <div class="sec">
+    <div class="card">
+      <div class="card-label">Naked sit</div>
+      <div style="display:flex;gap:8px;margin-bottom:14px" id="bp-sit-presets"></div>
+      <div class="bp-sit-circle" id="bp-sit-circle-wrap">
+        <svg width="120" height="120" viewBox="0 0 120 120">
+          <circle cx="60" cy="60" r="52" fill="none" stroke="var(--bg3)" stroke-width="6"/>
+          <circle id="bp-sit-ring" cx="60" cy="60" r="52" fill="none" stroke="var(--accent)" stroke-width="6" stroke-dasharray="327" stroke-dashoffset="327" stroke-linecap="round"/>
+        </svg>
+        <div class="bp-sit-num">
+          <div id="bp-sit-time" style="font-size:22px;font-weight:700;font-family:var(--mono);color:var(--text)">0:00</div>
+          <div id="bp-sit-target" style="font-size:10px;color:var(--text3);font-family:var(--mono)">/ 10:00</div>
+        </div>
+      </div>
+      <div class="row" style="margin-top:16px;justify-content:center">
+        <button class="btn btn-purple" id="bp-sit-btn" onclick="bpSitToggle()" style="padding:12px 38px">Start</button>
+        <button class="btn" onclick="bpSitReset()">Reset</button>
+      </div>
+      <div style="text-align:center;font-size:11px;color:var(--text3);margin-top:10px" id="bp-sit-hint">No input. Note the minute the first urge appears.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-label" style="justify-content:space-between">
+        <span>Trigger log</span>
+      </div>
+      <div class="row" style="margin-bottom:12px;flex-wrap:wrap;gap:6px" id="bp-trigger-quick"></div>
+      <div class="row">
+        <input class="inp" type="text" id="bp-trigger-inp" placeholder="Custom trigger..." onkeydown="if(event.key==='Enter')bpLogTrigger(this.value)">
+        <button class="btn btn-purple" onclick="bpLogTrigger(document.getElementById('bp-trigger-inp').value)">Log</button>
+      </div>
+      <div class="divider" style="margin:14px 0 8px"></div>
+      <div id="bp-log-list"></div>
+      <div id="bp-log-empty" class="empty-state" style="display:none;padding:20px 0">No entries logged today</div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Phase progress</div>
+      <div style="display:flex;gap:10px;margin-bottom:6px" id="bp-phase-pills"></div>
+      <div style="font-size:11px;color:var(--text3)" id="bp-day-count"></div>
+    </div>
+
+    <div id="bp-phases"></div>
+
+    <div class="card">
+      <div class="card-label">Baseline vs current</div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val" id="bp-baseline-val">‚Äî</div><div class="stat-sub">Phase 1 baseline / day</div></div>
+        <div class="stat-card"><div class="stat-val" id="bp-current-val">‚Äî</div><div class="stat-sub">Last 24h triggers</div></div>
+      </div>
+      <button class="btn" style="width:100%;margin-top:4px" onclick="bpSetBaseline()">Set today as baseline</button>
+    </div>
+  </div>
+</div>
+
 <!-- NAV -->
 <nav class="nav">
   <button class="nav-btn active" id="nav-fw" onclick="switchTab('fw')">
@@ -406,6 +483,9 @@ textarea.inp{resize:none;line-height:1.6}
   </button>
   <button class="nav-btn" id="nav-wheel" onclick="switchTab('wheel')">
     <svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.5" stroke="currentColor" stroke-width="1.5"/><circle cx="10" cy="10" r="2" fill="currentColor"/><line x1="10" y1="2.5" x2="10" y2="7" stroke="currentColor" stroke-width="1.5"/><line x1="10" y1="13" x2="10" y2="17.5" stroke="currentColor" stroke-width="1.5"/><line x1="2.5" y1="10" x2="7" y2="10" stroke="currentColor" stroke-width="1.5"/><line x1="13" y1="10" x2="17.5" y2="10" stroke="currentColor" stroke-width="1.5"/></svg>Wheel
+  </button>
+  <button class="nav-btn" id="nav-boredom" onclick="switchTab('boredom')">
+    <svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.5" stroke="currentColor" stroke-width="1.5"/><path d="M7 12.5c0 0 1.2 1 3 1s3-1 3-1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="7.2" y1="8" x2="8.4" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="11.6" y1="8" x2="12.8" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Boredom
   </button>
 </nav>
 
@@ -574,12 +654,13 @@ function calcFocusStreak(){
 }
 
 function switchTab(t){
-  ['fw','goals','habits','history','wheel'].forEach(x=>{document.getElementById('tab-'+x).classList.toggle('active',x===t);document.getElementById('nav-'+x).classList.toggle('active',x===t);});
+  ['fw','goals','habits','history','wheel','boredom'].forEach(x=>{document.getElementById('tab-'+x).classList.toggle('active',x===t);document.getElementById('nav-'+x).classList.toggle('active',x===t);});
   if(t==='goals'){renderXPBar();renderGoalTabs();renderGoalContent();}
   if(t==='habits'){renderHabits();renderHeatmap();renderCompound();}
   if(t==='history'){renderCalendar();renderHistory();}
   if(t==='fw')fwRenderList();
   if(t==='wheel'){wheelDrawStatic();wheelRenderPins();wheelTableRender();}
+  if(t==='boredom')bpRenderAll();
 }
 
 // ‚îÄ‚îÄ GANTT / TIMELINE ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
@@ -858,7 +939,7 @@ function renderPNode(node,depth){
     ${deadlineBadge}
     ${totalSp>0?`<span class="p-sp-badge">${totalSp}SP</span>`:''}
     <div class="p-acts">
-      <button class="date-toggle${dOpen?' open':''}${hasAnyDate?' has':''}" onclick="toggleNodeDates('${node.id}')" title="Toggle dates"><i class="arr">‚ñ∏</i>${hasAnyDate?'<span style="font-size:9px;margin-left:1px">üìÖ</span>':''}</button>
+      <button class="date-toggle${dOpen?' open':''}${hasAnyDate?' has':''}" onclick="toggleNodeDates('${node.id}')" title="Toggle dates"><i class="arr">‚ñ∏</i>${hasAnyDate?'<span style="font-size:9px;margin-left:1px">üìÖ</span>':''}</button>
       ${hasC?`<button class="btn btn-ghost btn-xs" onclick="toggleCollapse('${node.id}')" style="font-size:11px">${node.collapsed?'‚ñ∏':'‚ñæ'}</button>`:''}
       <button class="btn btn-ghost btn-xs" onclick="toggleFocus('${node.id}')" style="color:${node.inFocus?'var(--accent)':'var(--text3)'}">DF</button>
       <button class="btn btn-ghost btn-xs" onclick="showInline('${node.id}')">+</button>
@@ -925,7 +1006,7 @@ function renderSprintPanel(){
     ${timerBlock}
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
       <div style="font-size:10px;color:var(--text3);font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase">${t.done} OWN ¬∑ ${childSp} SUB ¬∑ ${getDailySprintCount(TODAY)} TODAY</div>
-      ${focusStr>0?`<div style="font-size:9px;color:var(--text3);font-family:var(--mono);letter-spacing:.08em">üî• ${focusStr}D FOCUS STREAK</div>`:''}
+      ${focusStr>0?`<div style="font-size:9px;color:var(--text3);font-family:var(--mono);letter-spacing:.08em">üî• ${focusStr}D FOCUS STREAK</div>`:''}
     </div>
     <div class="sq-grid" style="gap:3px">${sqs}</div>
     ${t.done+childSp>=totalSq?`<div style="font-size:9px;color:var(--text3);margin-top:6px;font-family:var(--mono);letter-spacing:.06em">+ ${t.done+childSp-totalSq+6} more beyond view</div>`:''}
@@ -1208,7 +1289,7 @@ function renderHistory(){
     </div>
     <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
       ${mult>1?`<span style="font-size:11px;font-weight:600;padding:4px 12px;border-radius:var(--radius-pill);background:var(--sand-dim);color:#b07030;border:1px solid var(--sand)">√ó${mult} multiplier active</span>`:''}
-      ${focusStr>0?`<span style="font-size:11px;font-weight:600;padding:4px 12px;border-radius:var(--radius-pill);background:var(--sky-dim);color:#5090b0;border:1px solid rgba(168,196,212,0.4)">üî• ${focusStr}d focus streak</span>`:''}
+      ${focusStr>0?`<span style="font-size:11px;font-weight:600;padding:4px 12px;border-radius:var(--radius-pill);background:var(--sky-dim);color:#5090b0;border:1px solid rgba(168,196,212,0.4)">üî• ${focusStr}d focus streak</span>`:''}
     </div>
   </div>`;
 
@@ -1428,12 +1509,228 @@ function wheelTableRender(){
   h+='</tbody></table>';
   wrap.innerHTML=h;
 }
+
+// ‚îÄ‚îÄ BOREDOM PROTOCOL ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+const BP_PHASES=[
+  {id:'p1',num:1,label:'Baseline mapping',sub:'See your stimulation-seeking pattern without changing it',dayStart:1,dayEnd:5,
+   rules:[
+    'Log every reach-for-stimulation moment ‚Äî phone check, tab switch, snack, music change. Just the trigger and time.',
+    'Run one 10-minute naked sit daily. No input, no task. Note the minute the first urge appears.',
+    'Change nothing else. Visibility only ‚Äî restricting now causes the relapse pattern from before.'
+   ]},
+  {id:'p2',num:2,label:'Friction, not removal',sub:'Raise the cost of low-value stimulation without banning it',dayStart:6,dayEnd:18,
+   rules:[
+    '10-second rule: before any reach-for-stimulation, wait 10 seconds and silently name the trigger. Then choose freely.',
+    'Extend the naked sit by 2 minutes every 3 days ‚Äî 10 ‚Üí 18 min by phase end.',
+    'Add one physical friction point ‚Äî phone in another room during work, app icon removed. One change, not five.'
+   ]},
+  {id:'p3',num:3,label:'Substitution with intent',sub:'Route boredom toward self-generated stimulation first',dayStart:19,dayEnd:35,
+   rules:[
+    'Self-generated first: when bored, the first move is internal ‚Äî recall a problem, plan a sequence, hum a melody.',
+    'Interest menu becomes second priority, not first. Internal generation is the actual target skill.',
+    'One unstimulated transition daily ‚Äî a walk, commute, or queue with zero input.'
+   ]},
+  {id:'p4',num:4,label:'Boredom as default state',sub:'Boredom stops registering as aversive',dayStart:36,dayEnd:9999,
+   rules:[
+    'Naked sit becomes unscheduled ‚Äî done whenever idle, no timer, no end goal.',
+    'Monthly check: log one full day of triggers again, compare against phase 1 baseline.',
+    'Success marker: stimulation is something you choose for value, not something you reach for to escape a feeling.'
+   ]}
+];
+const BP_QUICK_TRIGGERS=['Phone check','Tab switch','Snack','Music change','Avoiding task','Just bored'];
+
+function bpGetState(){return LS('bp_state')||{startDate:TODAY,baseline:null};}
+function bpSaveState(s){LSS('bp_state',s);}
+function bpGetLog(){return LS('bp_log')||{};} // dateStr -> [{t,trigger}]
+function bpSaveLog(l){LSS('bp_log',l);}
+function bpGetSit(){return LS('bp_sit')||{target:600,elapsed:0,running:false};}
+function bpSaveSit(s){LSS('bp_sit',s);}
+
+let bpSitInterval=null;
+
+function bpDayNumber(){
+  const st=bpGetState();
+  const start=new Date(st.startDate+'T00:00:00');
+  const now=new Date(TODAY+'T00:00:00');
+  return Math.floor((now-start)/86400000)+1;
+}
+function bpCurrentPhase(){
+  const day=bpDayNumber();
+  return BP_PHASES.find(p=>day>=p.dayStart&&day<=p.dayEnd)||BP_PHASES[BP_PHASES.length-1];
+}
+
+function bpLogTrigger(trigger){
+  trigger=(trigger||'').trim();if(!trigger)return;
+  const log=bpGetLog();
+  if(!log[TODAY])log[TODAY]=[];
+  log[TODAY].push({t:new Date().toISOString(),trigger});
+  bpSaveLog(log);
+  const inp=document.getElementById('bp-trigger-inp');if(inp)inp.value='';
+  showNotify('Logged: '+trigger);
+  bpRenderLog();
+  bpRenderBaseline();
+}
+function bpRemoveTrigger(idx){
+  const log=bpGetLog();
+  if(log[TODAY])log[TODAY].splice(idx,1);
+  bpSaveLog(log);
+  bpRenderLog();
+  bpRenderBaseline();
+}
+
+function bpRenderQuickTriggers(){
+  const el=document.getElementById('bp-trigger-quick');if(!el)return;
+  el.innerHTML=BP_QUICK_TRIGGERS.map(t=>`<button class="btn btn-xs" onclick="bpLogTrigger('${esc(t)}')">${esc(t)}</button>`).join('');
+}
+function bpRenderLog(){
+  const log=bpGetLog();const today=log[TODAY]||[];
+  const list=document.getElementById('bp-log-list');const empty=document.getElementById('bp-log-empty');
+  if(!list)return;
+  if(!today.length){list.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  list.innerHTML=today.slice().reverse().map((e,ri)=>{
+    const idx=today.length-1-ri;
+    const time=new Date(e.t).toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'});
+    return`<div class="bp-log-row">
+      <span class="bp-trig-pill">${esc(e.trigger)}</span>
+      <span style="flex:1;font-size:12px;color:var(--text3);font-family:var(--mono)">${time}</span>
+      <button class="btn btn-danger btn-xs" onclick="bpRemoveTrigger(${idx})">√ó</button>
+    </div>`;
+  }).join('');
+}
+
+function bpSitPresets(){
+  const el=document.getElementById('bp-sit-presets');if(!el)return;
+  const sit=bpGetSit();
+  const presets=[5,10,15,20];
+  el.innerHTML=presets.map(m=>`<button class="dur-btn${sit.target===m*60&&!sit.running?' on':''}" onclick="bpSitSetTarget(${m*60})">${m}M</button>`).join('');
+}
+function bpSitSetTarget(sec){
+  const sit=bpGetSit();if(sit.running)return;
+  sit.target=sec;bpSaveSit(sit);
+  bpRenderSit();
+}
+function bpSitToggle(){
+  const sit=bpGetSit();
+  if(sit.running){
+    sit.running=false;bpSaveSit(sit);
+    clearInterval(bpSitInterval);bpSitInterval=null;
+    bpRenderSit();
+  }else{
+    sit.running=true;bpSaveSit(sit);
+    bpSitInterval=setInterval(()=>{
+      const s=bpGetSit();
+      s.elapsed++;bpSaveSit(s);
+      bpRenderSit();
+      if(s.elapsed>=s.target){
+        clearInterval(bpSitInterval);bpSitInterval=null;
+        const s2=bpGetSit();s2.running=false;bpSaveSit(s2);
+        showNotify('Naked sit complete');
+        awardXP(15,'NAKED SIT');
+        bpRenderSit();
+      }
+    },1000);
+    bpRenderSit();
+  }
+}
+function bpSitReset(){
+  clearInterval(bpSitInterval);bpSitInterval=null;
+  const sit=bpGetSit();sit.elapsed=0;sit.running=false;bpSaveSit(sit);
+  bpRenderSit();
+}
+function bpRenderSit(){
+  const sit=bpGetSit();
+  const timeEl=document.getElementById('bp-sit-time');
+  const targetEl=document.getElementById('bp-sit-target');
+  const btnEl=document.getElementById('bp-sit-btn');
+  const ring=document.getElementById('bp-sit-ring');
+  const hint=document.getElementById('bp-sit-hint');
+  if(!timeEl)return;
+  const m=Math.floor(sit.elapsed/60),s=sit.elapsed%60;
+  timeEl.textContent=m+':'+(s<10?'0':'')+s;
+  const tm=Math.floor(sit.target/60);
+  targetEl.textContent='/ '+tm+':00';
+  const circ=327;
+  const pct=Math.min(1,sit.elapsed/sit.target);
+  ring.setAttribute('stroke-dashoffset',circ*(1-pct));
+  btnEl.textContent=sit.running?'Pause':(sit.elapsed>0?'Resume':'Start');
+  if(sit.running)hint.textContent='No input. Note the minute the first urge appears.';
+  else if(sit.elapsed>=sit.target&&sit.target>0)hint.textContent='Complete ‚Äî reset to go again.';
+  bpSitPresets();
+}
+
+function bpSetBaseline(){
+  const st=bpGetState();
+  const log=bpGetLog();
+  const today=(log[TODAY]||[]).length;
+  st.baseline=today;
+  st.baselineDate=TODAY;
+  bpSaveState(st);
+  showNotify('Baseline set: '+today+' triggers/day');
+  bpRenderBaseline();
+}
+function bpRenderBaseline(){
+  const st=bpGetState();
+  const log=bpGetLog();
+  const baseEl=document.getElementById('bp-baseline-val');
+  const curEl=document.getElementById('bp-current-val');
+  if(!baseEl)return;
+  baseEl.textContent=st.baseline!=null?st.baseline:'‚Äî';
+  curEl.textContent=(log[TODAY]||[]).length;
+}
+
+function bpRenderPhasePills(){
+  const el=document.getElementById('bp-phase-pills');const dayEl=document.getElementById('bp-day-count');
+  if(!el)return;
+  const day=bpDayNumber();
+  const cur=bpCurrentPhase();
+  el.innerHTML=BP_PHASES.map(p=>{
+    const isCur=p.id===cur.id;
+    const isDone=day>p.dayEnd;
+    const bg=isCur?'var(--accent)':isDone?'var(--accent-dim)':'var(--bg2)';
+    const col=isCur?'white':isDone?'var(--accent-d)':'var(--text3)';
+    return`<div style="flex:1;text-align:center;padding:8px 4px;border-radius:var(--radius-sm);background:${bg};color:${col};font-size:11px;font-weight:600">P${p.num}</div>`;
+  }).join('');
+  dayEl.textContent='Day '+day+' ¬∑ '+cur.label;
+}
+
+function bpRenderPhases(){
+  const el=document.getElementById('bp-phases');if(!el)return;
+  const day=bpDayNumber();
+  const cur=bpCurrentPhase();
+  el.innerHTML=BP_PHASES.map(p=>{
+    const isCur=p.id===cur.id;
+    const isLocked=day<p.dayStart;
+    const badgeBg=isCur?'var(--accent)':'var(--bg2)';
+    const badgeCol=isCur?'white':'var(--text3)';
+    const durLabel=p.dayEnd===9999?'day '+p.dayStart+'+':'days '+p.dayStart+'‚Äì'+p.dayEnd;
+    return`<div class="bp-phase${isLocked?' locked':''}">
+      <div class="bp-phase-head">
+        <span class="bp-phase-badge" style="background:${badgeBg};color:${badgeCol}">phase ${p.num}</span>
+        <span class="bp-phase-title">${esc(p.label)}</span>
+        <span class="bp-phase-dur">${durLabel}</span>
+      </div>
+      <div class="bp-phase-goal">${esc(p.sub)}</div>
+      ${p.rules.map(r=>`<div class="bp-rule">${esc(r)}</div>`).join('')}
+    </div>`;
+  }).join('');
+}
+
+function bpRenderAll(){
+  bpRenderQuickTriggers();
+  bpRenderLog();
+  bpRenderSit();
+  bpRenderBaseline();
+  bpRenderPhasePills();
+  bpRenderPhases();
+}
+
   // Supabase Sync
   (function(){var S='https://vgurpottnlcixzjmatlz.supabase.co',K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZndXJwb3R0bmxjaXh6am1hdGx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDc2MTMsImV4cCI6MjA5NDc4MzYxM30.60bgWxj79Md4eNZYrfnYEQgUNjQr4SJEK27QcTsoRr0',TN='life_tracker_data',U='default';
               function hdr(){return{'apikey':K,'Authorization':'Bearer '+K,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'};}
               function push(k,v){fetch(S+'/rest/v1/'+TN,{method:'POST',headers:hdr(),body:JSON.stringify({user_id:U,data_key:k,data_value:v,updated_at:new Date().toISOString()})}).catch(function(){});}
               var _lss=window.LSS;window.LSS=function(k,v){if(_lss)_lss.call(this,k,v);push(k,v);};
-              window.addEventListener('load',function(){fetch(S+'/rest/v1/'+TN+'?user_id=eq.'+U+'&select=data_key,data_value',{headers:hdr()}).then(function(r){return r.json();}).then(function(rows){if(!Array.isArray(rows))return;rows.forEach(function(r){if(r.data_key)try{localStorage.setItem(r.data_key,JSON.stringify(r.data_value));}catch(e){}});try{goals=LS('lt2_goals')||[];habits=LS('lt2_habits')||habits;timers=LS('lt2_timers')||{};history=LS('lt2_history')||[];woops=LS('lt2_woops')||[];sprintDur=LS('lt2_dur')||5;wheelActivePin=LS('lt2_wheel_pin')||'yellow';if(typeof fwRenderList==='function')fwRenderList();if(typeof renderXPBar==='function')renderXPBar();}catch(e){}}).catch(function(){});});
+              window.addEventListener('load',function(){fetch(S+'/rest/v1/'+TN+'?user_id=eq.'+U+'&select=data_key,data_value',{headers:hdr()}).then(function(r){return r.json();}).then(function(rows){if(!Array.isArray(rows))return;rows.forEach(function(r){if(r.data_key)try{localStorage.setItem(r.data_key,JSON.stringify(r.data_value));}catch(e){}});try{goals=LS('lt2_goals')||[];habits=LS('lt2_habits')||habits;timers=LS('lt2_timers')||{};history=LS('lt2_history')||[];woops=LS('lt2_woops')||[];sprintDur=LS('lt2_dur')||5;wheelActivePin=LS('lt2_wheel_pin')||'yellow';if(typeof fwRenderList==='function')fwRenderList();if(typeof renderXPBar==='function')renderXPBar();if(typeof renderGoalTabs==='function')renderGoalTabs();if(typeof renderGoalContent==='function')renderGoalContent();if(typeof renderHabits==='function')renderHabits();if(typeof renderHeatmap==='function')renderHeatmap();if(typeof renderCompound==='function')renderCompound();if(typeof renderCalendar==='function')renderCalendar();if(typeof renderHistory==='function')renderHistory();if(typeof wheelDrawStatic==='function')wheelDrawStatic();if(typeof wheelRenderPins==='function')wheelRenderPins();if(typeof wheelTableRender==='function')wheelTableRender();if(typeof bpRenderAll==='function')bpRenderAll();}catch(e){}}).catch(function(){});});
              })();
 </script>
 </body>
