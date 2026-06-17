@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
-  /* Sage-green / cream palette ‚Äî from reference */
+  /* Sage-green / cream palette — from reference */
   --bg:#f0ede6;--bg1:#faf8f3;--bg2:#e8e4da;--bg3:#ddd9cf;--bg4:#d0ccbf;
   --text:#2c2c2c;--text2:#6b6b6b;--text3:#a0a09a;--text4:#c8c5bd;
   --accent:#6b9e7a;--accent-d:#4e7d5c;--accent-dim:rgba(107,158,122,0.12);--accent-mid:rgba(107,158,122,0.35);
@@ -141,7 +141,7 @@ textarea.inp{resize:none;line-height:1.6}
 .p-row.sel{background:var(--accent-dim);outline:1.5px solid var(--accent-mid)}
 .p-dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--border2);background:var(--bg2);flex-shrink:0;transition:all .15s;position:relative}
 .p-dot.done{background:var(--accent);border-color:var(--accent)}
-.p-dot.done::after{content:'‚úì';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:white;font-weight:700}
+.p-dot.done::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:white;font-weight:700}
 .p-dot.act{border-color:var(--accent);background:var(--accent-dim)}
 .p-name{flex:1;font-size:15px;font-weight:500;color:var(--text);line-height:1.3}
 .p-name.done{color:var(--text3);text-decoration:line-through}
@@ -180,7 +180,7 @@ textarea.inp{resize:none;line-height:1.6}
 .t-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;font-family:var(--mono);color:var(--text)}
 .timer-btns{display:flex;flex-direction:column;gap:8px}
 
-/* sprint squares ‚Äî single row via flex-nowrap + scroll */
+/* sprint squares — single row via flex-nowrap + scroll */
 .sq-grid{display:flex;flex-wrap:nowrap;gap:4px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
 .sq-grid::-webkit-scrollbar{display:none}
 .sq{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--border2);background:var(--bg2);flex-shrink:0}
@@ -339,9 +339,9 @@ textarea.inp{resize:none;line-height:1.6}
       <div id="hm-outer" style="overflow-x:auto;scrollbar-width:none"></div>
     </div>
     <div class="card">
-      <div class="card-label">Compound score ‚Äî 90 days</div>
+      <div class="card-label">Compound score — 90 days</div>
       <div id="compound-wrap"></div>
-      <div style="font-size:10px;color:var(--text3);margin-top:8px;font-family:var(--mono);letter-spacing:.08em">+1% PER DAY ¬∑ ‚àí3% PER MISS</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:8px;font-family:var(--mono);letter-spacing:.08em">+1% PER DAY ¬∑ −3% PER MISS</div>
     </div>
   </div>
 </div>
@@ -459,8 +459,8 @@ textarea.inp{resize:none;line-height:1.6}
     <div class="card">
       <div class="card-label">Baseline vs current</div>
       <div class="stat-grid">
-        <div class="stat-card"><div class="stat-val" id="bp-baseline-val">‚Äî</div><div class="stat-sub">Phase 1 baseline / day</div></div>
-        <div class="stat-card"><div class="stat-val" id="bp-current-val">‚Äî</div><div class="stat-sub">Last 24h triggers</div></div>
+        <div class="stat-card"><div class="stat-val" id="bp-baseline-val">—</div><div class="stat-sub">Phase 1 baseline / day</div></div>
+        <div class="stat-card"><div class="stat-val" id="bp-current-val">—</div><div class="stat-sub">Last 24h triggers</div></div>
       </div>
       <button class="btn" style="width:100%;margin-top:4px" onclick="bpSetBaseline()">Set today as baseline</button>
     </div>
@@ -495,8 +495,8 @@ textarea.inp{resize:none;line-height:1.6}
     <div class="gantt-modal-header">
       <div class="gantt-title" id="gantt-modal-title" style="font-size:11px;letter-spacing:.12em"></div>
       <div style="display:flex;align-items:center;gap:10px">
-        <div style="font-size:8px;font-family:var(--mono);color:var(--text3);text-transform:uppercase;letter-spacing:.08em">‚óÜ deadline &nbsp;‚Äï today</div>
-        <button class="gantt-expand-btn" onclick="closeGanttModal()">‚úï CLOSE</button>
+        <div style="font-size:8px;font-family:var(--mono);color:var(--text3);text-transform:uppercase;letter-spacing:.08em">◆ deadline &nbsp;― today</div>
+        <button class="gantt-expand-btn" onclick="closeGanttModal()">✕ CLOSE</button>
       </div>
     </div>
     <div class="gantt-modal-body" id="gantt-modal-body"></div>
@@ -541,7 +541,7 @@ let sprintDur=LS('lt2_dur')||5;
 let activeGoalIdx=0,activeStepId=null,timerInt=null;
 let swMode=false,swRunning=false,swSec=0,swInt=null;
 let fwEditingId=null;
-// UI state ‚Äî not persisted (collapses reset on refresh, intentional)
+// UI state — not persisted (collapses reset on refresh, intentional)
 let nodeDateState={};  // nodeId -> bool open
 let goalDateState={};  // goalId -> bool open
 
@@ -568,7 +568,7 @@ function toggleGoalDates(id){
 }
 function showNotify(msg,dur=3000){const el=document.getElementById('notify');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),dur);}
 
-// ‚îÄ‚îÄ XP / GAMIFICATION ENGINE ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+// ── XP / GAMIFICATION ENGINE ─────────────────────
 const XP_LEVELS=[0,100,250,450,700,1000,1400,1900,2500,3200,4000,5000,6500,8500,11000,15000];
 const LEVEL_NAMES=['ROOKIE','TRAINEE','OPERATOR','AGENT','SPECIALIST','ELITE','VETERAN','EXPERT','MASTER','GRANDMASTER','LEGEND','MYTH','GHOST','PHANTOM','SPECTER','APEX'];
 
@@ -590,19 +590,19 @@ function getStreakMultiplier(){
   const log=getHlog();
   let streak=0;const d=new Date();
   while(true){const k=fmtDate(d);const done=habits.filter(h=>(log[k]||{})[h.id]).length;if(done>0)streak++;else break;d.setDate(d.getDate()-1);}
-  if(streak>=14)return{mult:3,cls:'x3',label:'√ó3 STREAK'};
-  if(streak>=7)return{mult:2,cls:'x2',label:'√ó2 STREAK'};
-  if(streak>=3)return{mult:1.5,cls:'x15',label:'√ó1.5'};
-  return{mult:1,cls:'x1',label:'√ó1'};
+  if(streak>=14)return{mult:3,cls:'x3',label:'×3 STREAK'};
+  if(streak>=7)return{mult:2,cls:'x2',label:'×2 STREAK'};
+  if(streak>=3)return{mult:1.5,cls:'x15',label:'×1.5'};
+  return{mult:1,cls:'x1',label:'×1'};
 }
 
 function getDailySprintCount(dateStr){
   return history.filter(h=>h.type==='sprint'&&h.date===dateStr).length;
 }
 function getSprintChainBadge(count){
-  if(count>=5)return{cls:'ultra',label:'‚ö° ULTRA FOCUS',xpBonus:50};
-  if(count>=3)return{cls:'deep',label:'‚óà DEEP WORK',xpBonus:25};
-  if(count>=1)return{cls:'flow',label:'‚ñ≤ FLOW STATE',xpBonus:10};
+  if(count>=5)return{cls:'ultra',label:'⚡ ULTRA FOCUS',xpBonus:50};
+  if(count>=3)return{cls:'deep',label:'◈ DEEP WORK',xpBonus:25};
+  if(count>=1)return{cls:'flow',label:'▲ FLOW STATE',xpBonus:10};
   return null;
 }
 
@@ -616,14 +616,14 @@ function awardXP(amount,label){
   // XP toast
   const toast=document.getElementById('xp-toast');
   if(toast){
-    toast.textContent=`+${total} XP${mult>1?' (√ó'+mult+')':''}  ${label}`;
+    toast.textContent=`+${total} XP${mult>1?' (×'+mult+')':''}  ${label}`;
     toast.classList.add('show');
     setTimeout(()=>toast.classList.remove('show'),2200);
   }
   // Level up notify
   const newLevel=getLevel(d.total);
   if(newLevel>oldLevel){
-    setTimeout(()=>showNotify(`LEVEL UP ‚Üí ${LEVEL_NAMES[newLevel]} (LVL ${newLevel})`,4000),400);
+    setTimeout(()=>showNotify(`LEVEL UP → ${LEVEL_NAMES[newLevel]} (LVL ${newLevel})`,4000),400);
   }
   renderXPBar();
 }
@@ -641,7 +641,7 @@ function renderXPBar(){
   bars.forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=html;});
 }
 
-// ‚îÄ‚îÄ SPRINT CHAIN TRACKING ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+// ── SPRINT CHAIN TRACKING ─────────────────────────
 function getChainDataForDate(dateStr){
   const count=getDailySprintCount(dateStr);
   const focusStreak=calcFocusStreak();
@@ -663,7 +663,7 @@ function switchTab(t){
   if(t==='boredom')bpRenderAll();
 }
 
-// ‚îÄ‚îÄ GANTT / TIMELINE ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+// ── GANTT / TIMELINE ──────────────────────────────
 let ganttGoalId=null; // tracks which goal is expanded in modal
 
 function collectRows(goal){
@@ -720,7 +720,7 @@ function buildGanttSVG(goal,svgW){
     const ry=HEADER_H+i*ROW_H,mid=ry+ROW_H/2;
     const indent=r.depth*7;
     const maxCh=Math.floor((LABEL_W-indent-4)/5.2);
-    const lbl=r.name.length>maxCh?r.name.slice(0,maxCh-1)+'‚Ä¶':r.name;
+    const lbl=r.name.length>maxCh?r.name.slice(0,maxCh-1)+'…':r.name;
     svg+=`<text x="${indent+2}" y="${mid}" dominant-baseline="middle" fill="${r.depth===0?'rgba(255,255,255,0.92)':'rgba(176,176,176,0.7)'}" font-size="${r.depth===0?9:8}" font-weight="${r.depth===0?'700':'400'}" font-family="'DM Mono',monospace">${esc(lbl)}</text>`;
 
     if(r.start||r.end){
@@ -750,8 +750,8 @@ function renderGantt(goal){
     <div class="gantt-header">
       <div class="gantt-title">Timeline &amp; Gantt</div>
       <div style="display:flex;align-items:center;gap:10px">
-        <div style="font-size:8px;font-family:var(--mono);color:var(--text3);text-transform:uppercase;letter-spacing:.08em">‚óÜ deadline &nbsp;‚Äï today</div>
-        <button class="gantt-expand-btn" onclick="openGanttModal('${goal.id}')">‚§¢ EXPAND</button>
+        <div style="font-size:8px;font-family:var(--mono);color:var(--text3);text-transform:uppercase;letter-spacing:.08em">◆ deadline &nbsp;― today</div>
+        <button class="gantt-expand-btn" onclick="openGanttModal('${goal.id}')">⤢ EXPAND</button>
       </div>
     </div>
     <div class="gantt-svg-wrap">${res.svg}</div>
@@ -765,7 +765,7 @@ function openGanttModal(gid){
   const body=document.getElementById('gantt-modal-body');
   const title=document.getElementById('gantt-modal-title');
   title.textContent=g.name.toUpperCase();
-  // Use wider SVG for modal ‚Äî 700px
+  // Use wider SVG for modal — 700px
   const res=buildGanttSVG(g,700);
   if(res){body.innerHTML=`<div style="overflow-x:auto;scrollbar-width:thin;scrollbar-color:var(--bg3) transparent">${res.svg}</div>`;}
   else{body.innerHTML=`<div class="empty-state">No dates set on any steps yet</div>`;}
@@ -776,7 +776,7 @@ function closeGanttModal(){
   ganttGoalId=null;
 }
 
-// ‚îÄ‚îÄ FW ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+// ── FW ──────────────────────────────────────────
 function fwNew(){const w={id:uid(),title:'',overview:'',wish:'',outcome:'',obstacle:'',plan:{steps:[]},created:new Date().toLocaleDateString('en',{month:'short',day:'numeric',year:'numeric'}),transferred:false};woops.push(w);saveAll();fwOpen(w.id);}
 function fwOpen(id){fwEditingId=id;document.getElementById('fw-list').style.display='none';document.getElementById('fw-editor').style.display='block';fwRenderEditor();}
 function fwClose(){fwEditingId=null;document.getElementById('fw-list').style.display='block';document.getElementById('fw-editor').style.display='none';fwRenderList();}
@@ -790,9 +790,9 @@ function fwRenderEditor(){
   const pct=Math.round(n/4*100);
   document.getElementById('fw-editor').innerHTML=`
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-      <button class="btn btn-ghost" onclick="fwClose()">‚Üê BACK</button>
+      <button class="btn btn-ghost" onclick="fwClose()">← BACK</button>
       <div style="flex:1;font-size:14px;font-weight:700;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--mono)">${esc(w.title||'UNTITLED')}</div>
-      ${!w.transferred?`<button class="btn btn-green" onclick="fwTransfer('${w.id}')">‚Üí Goals</button>`:`<span style="font-size:10px;color:var(--accent);padding:3px 8px;background:var(--accent-dim);border:1px solid var(--accent-mid);border-radius:2px;font-weight:600">Transferred</span>`}
+      ${!w.transferred?`<button class="btn btn-green" onclick="fwTransfer('${w.id}')">→ Goals</button>`:`<span style="font-size:10px;color:var(--accent);padding:3px 8px;background:var(--accent-dim);border:1px solid var(--accent-mid);border-radius:2px;font-weight:600">Transferred</span>`}
     </div>
     <div class="fw-progress"><div class="fw-progress-fill" style="width:${pct}%"></div></div>
     <div class="card" style="margin-bottom:12px">
@@ -835,7 +835,7 @@ function fwRenderEditor(){
         <button class="btn btn-green btn-xs" style="padding:9px 14px" onclick="fwAddStep(null)">+ Step</button>
       </div>
     </div>
-    ${!w.transferred?`<button class="btn btn-green" style="width:100%;padding:14px;font-size:13px;margin-bottom:10px;letter-spacing:.1em" onclick="fwTransfer('${w.id}')">Add to Goals pipeline ‚Üí</button>`:''}
+    ${!w.transferred?`<button class="btn btn-green" style="width:100%;padding:14px;font-size:13px;margin-bottom:10px;letter-spacing:.1em" onclick="fwTransfer('${w.id}')">Add to Goals pipeline →</button>`:''}
     <button class="btn btn-danger" style="width:100%;padding:12px;font-size:12px;letter-spacing:.1em" onclick="fwDelete('${w.id}')">Delete draft</button>
   `;
 }
@@ -846,12 +846,12 @@ function fwRenderNode(node,idx,path){
   let h=`<div class="hta-node"><div class="hta-row"><span class="hta-id">${myPath}</span><span class="hta-text">${esc(node.name)}</span>
     ${node.sprint?`<span style="font-size:9px;padding:2px 6px;border-radius:2px;background:var(--accent);color:white;flex-shrink:0;font-family:var(--mono);font-weight:700">${node.sprint}M</span>`:''}
     <button class="btn btn-ghost btn-xs" onclick="fwShowInline('${myPath}')">+</button>
-    <button class="btn btn-danger btn-xs" onclick="fwRemoveStep('${myPath}')">√ó</button></div>
+    <button class="btn btn-danger btn-xs" onclick="fwRemoveStep('${myPath}')">×</button></div>
     <div class="hta-add-inline" id="fwai-${key}">
       <input class="inp" type="text" id="fwai-inp-${key}" placeholder="Sub-step..." style="font-size:11px;padding:5px 9px" onkeydown="if(event.key==='Enter')fwAddStep('${myPath}')">
       <input class="inp" type="number" id="fwai-sp-${key}" placeholder="min" style="width:50px;padding:5px 8px;font-size:11px">
       <button class="btn btn-green btn-xs" onclick="fwAddStep('${myPath}')">Add</button>
-      <button class="btn btn-ghost btn-xs" onclick="fwHideInline('${myPath}')">√ó</button>
+      <button class="btn btn-ghost btn-xs" onclick="fwHideInline('${myPath}')">×</button>
     </div>`;
   if(hasC)h+=`<div class="hta-kids">${node.children.map((c,ci)=>fwRenderNode(c,ci+1,[...path,idx])).join('')}</div>`;
   return h+`</div>`;
@@ -902,7 +902,7 @@ function fwRenderList(){
   </div>`).join('');
 }
 
-// ‚îÄ‚îÄ GOALS ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+// ── GOALS ──────────────────────────────────────
 function findNode(id,arr){for(const n of arr){if(n.id===id)return n;const f=findNode(id,n.children);if(f)return f;}return null;}
 function countChildSp(node){let t=0;node.children.forEach(c=>{const tm=timers[c.id];if(tm)t+=tm.done;t+=countChildSp(c);});return t;}
 function getFocusNodes(arr,out=[]){arr.forEach(n=>{if(n.inFocus&&!n.done)out.push(n);getFocusNodes(n.children,out);});return out;}
@@ -930,7 +930,7 @@ function renderPNode(node,depth){
   const hasDeadline=!!(node.deadline&&node.deadline!='');
   const hasAnyDate=!!(node.startDate||node.deadline);
   const isOverdue=hasDeadline&&node.deadline<TODAY&&!node.done;
-  const deadlineBadge=hasDeadline?`<span class="p-date-badge has-date" style="${isOverdue?'color:#ff4444;border-color:#ff444488':''}">${isOverdue?'‚ö† ':''}${fmtShort(node.deadline)}</span>`:'';
+  const deadlineBadge=hasDeadline?`<span class="p-date-badge has-date" style="${isOverdue?'color:#ff4444;border-color:#ff444488':''}">${isOverdue?'⚠ ':''}${fmtShort(node.deadline)}</span>`:'';
   const dOpen=nodeDateState[node.id]||false;
 
   return`<div class="p-node"><div class="p-row${sel?' sel':''}">
@@ -939,16 +939,16 @@ function renderPNode(node,depth){
     ${deadlineBadge}
     ${totalSp>0?`<span class="p-sp-badge">${totalSp}SP</span>`:''}
     <div class="p-acts">
-      <button class="date-toggle${dOpen?' open':''}${hasAnyDate?' has':''}" onclick="toggleNodeDates('${node.id}')" title="Toggle dates"><i class="arr">‚ñ∏</i>${hasAnyDate?'<span style="font-size:9px;margin-left:1px">üìÖ</span>':''}</button>
-      ${hasC?`<button class="btn btn-ghost btn-xs" onclick="toggleCollapse('${node.id}')" style="font-size:11px">${node.collapsed?'‚ñ∏':'‚ñæ'}</button>`:''}
+      <button class="date-toggle${dOpen?' open':''}${hasAnyDate?' has':''}" onclick="toggleNodeDates('${node.id}')" title="Toggle dates"><i class="arr">▸</i>${hasAnyDate?'<span style="font-size:9px;margin-left:1px">📅</span>':''}</button>
+      ${hasC?`<button class="btn btn-ghost btn-xs" onclick="toggleCollapse('${node.id}')" style="font-size:11px">${node.collapsed?'▸':'▾'}</button>`:''}
       <button class="btn btn-ghost btn-xs" onclick="toggleFocus('${node.id}')" style="color:${node.inFocus?'var(--accent)':'var(--text3)'}">DF</button>
       <button class="btn btn-ghost btn-xs" onclick="showInline('${node.id}')">+</button>
-      <button class="btn btn-danger btn-xs" onclick="removeNode('${node.id}')">√ó</button>
+      <button class="btn btn-danger btn-xs" onclick="removeNode('${node.id}')">×</button>
     </div></div>
     <div class="node-dates${dOpen?' open':''}" id="nd-${node.id}">
       <div class="date-row">
         <div><div class="date-lbl">Start</div><input class="inp-date" type="date" value="${node.startDate||''}" onchange="saveNodeDate('${node.id}','startDate',this.value)"></div>
-        <div><div class="date-lbl" style="${isOverdue?'color:#ff4444':''}">Deadline${isOverdue?' ‚ö†':''}</div><input class="inp-date" type="date" value="${node.deadline||''}" style="${isOverdue?'border-color:#ff444488;color:#ff4444':''}" onchange="saveNodeDate('${node.id}','deadline',this.value)"></div>
+        <div><div class="date-lbl" style="${isOverdue?'color:#ff4444':''}">Deadline${isOverdue?' ⚠':''}</div><input class="inp-date" type="date" value="${node.deadline||''}" style="${isOverdue?'border-color:#ff444488;color:#ff4444':''}" onchange="saveNodeDate('${node.id}','deadline',this.value)"></div>
       </div>
     </div>
     <div class="add-inline" id="ail-${node.id}">
@@ -967,7 +967,7 @@ function renderSprintPanel(){
   const node=findNode(activeStepId,goals);if(!node)return'';
   if(!timers[activeStepId])timers[activeStepId]={done:0,running:false,sec:sprintDur*60,total:sprintDur*60};
   const t=timers[activeStepId];const childSp=countChildSp(node);
-  // More squares ‚Äî show up to 40, always at least 20
+  // More squares — show up to 40, always at least 20
   const totalSq=Math.min(40,Math.max(20,t.done+childSp+6));
   let sqs='';
   for(let i=0;i<totalSq;i++){
@@ -991,7 +991,7 @@ function renderSprintPanel(){
     <div class="timer-btns"><button class="btn btn-purple" onclick="toggleTimer()">${t.running?'PAUSE':'START'}</button><button class="btn" onclick="resetTimer()">Reset</button></div></div>`;
   }
   const goalData=goals[activeGoalIdx];
-  const obstacle=goalData&&goalData.obstacle?`<div style="font-size:12px;color:var(--accent);margin-bottom:12px;padding:10px 14px;background:var(--accent-dim);border:1px solid var(--accent-mid);border-left:3px solid var(--peach);border-radius:var(--radius-sm);line-height:1.6"><span style="font-weight:600;display:block;margin-bottom:4px">‚ö† Obstacle</span>${esc(goalData.obstacle)}</div>`:'';
+  const obstacle=goalData&&goalData.obstacle?`<div style="font-size:12px;color:var(--accent);margin-bottom:12px;padding:10px 14px;background:var(--accent-dim);border:1px solid var(--accent-mid);border-left:3px solid var(--peach);border-radius:var(--radius-sm);line-height:1.6"><span style="font-weight:600;display:block;margin-bottom:4px">⚠ Obstacle</span>${esc(goalData.obstacle)}</div>`:'';
   return`<div class="sprint-panel"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
     <div class="card-label" style="margin-bottom:0">Sprint</div>
     <div style="display:flex;align-items:center;gap:6px">
@@ -1006,7 +1006,7 @@ function renderSprintPanel(){
     ${timerBlock}
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
       <div style="font-size:10px;color:var(--text3);font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase">${t.done} OWN ¬∑ ${childSp} SUB ¬∑ ${getDailySprintCount(TODAY)} TODAY</div>
-      ${focusStr>0?`<div style="font-size:9px;color:var(--text3);font-family:var(--mono);letter-spacing:.08em">üî• ${focusStr}D FOCUS STREAK</div>`:''}
+      ${focusStr>0?`<div style="font-size:9px;color:var(--text3);font-family:var(--mono);letter-spacing:.08em">🔥 ${focusStr}D FOCUS STREAK</div>`:''}
     </div>
     <div class="sq-grid" style="gap:3px">${sqs}</div>
     ${t.done+childSp>=totalSq?`<div style="font-size:9px;color:var(--text3);margin-top:6px;font-family:var(--mono);letter-spacing:.06em">+ ${t.done+childSp-totalSq+6} more beyond view</div>`:''}
@@ -1039,19 +1039,19 @@ function renderGoalContent(){
   // Gantt chart (only if any dates set)
   let h=renderGantt(g);
 
-  // Goal-level dates card ‚Äî collapsible
+  // Goal-level dates card — collapsible
   const isOverdue=g.deadline&&g.deadline<TODAY&&!g.done;
   const gdOpen=goalDateState[g.id]||false;
   const gdHas=!!(g.startDate||g.deadline);
   h+=`<div class="card" style="margin-bottom:12px">
     <div style="display:flex;align-items:center;justify-content:space-between">
-      <div class="card-label" style="margin-bottom:0">Goal dates${gdHas&&!gdOpen?`<span style="margin-left:8px;font-size:9px;color:var(--accent-d);font-weight:600;font-style:normal">${g.startDate?fmtShort(g.startDate):'?'} ‚Üí ${g.deadline?fmtShort(g.deadline):'?'}${isOverdue?' ‚ö†':''}</span>`:''}</div>
-      <button class="date-toggle${gdOpen?' open':''}${gdHas?' has':''}" onclick="toggleGoalDates('${g.id}')"><i class="arr">‚ñ∏</i> <span style="margin-left:2px">DATES</span></button>
+      <div class="card-label" style="margin-bottom:0">Goal dates${gdHas&&!gdOpen?`<span style="margin-left:8px;font-size:9px;color:var(--accent-d);font-weight:600;font-style:normal">${g.startDate?fmtShort(g.startDate):'?'} → ${g.deadline?fmtShort(g.deadline):'?'}${isOverdue?' ⚠':''}</span>`:''}</div>
+      <button class="date-toggle${gdOpen?' open':''}${gdHas?' has':''}" onclick="toggleGoalDates('${g.id}')"><i class="arr">▸</i> <span style="margin-left:2px">DATES</span></button>
     </div>
     <div class="goal-dates-body${gdOpen?' open':''}" id="gd-${g.id}">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-top:10px">
         <div><div class="date-lbl">Start date</div><input class="inp-date" type="date" value="${g.startDate||''}" onchange="saveGoalDate('${g.id}','startDate',this.value)"></div>
-        <div><div class="date-lbl" style="${isOverdue?'color:#ff4444':''}">Deadline${isOverdue?' ‚ö†':''}</div><input class="inp-date" type="date" value="${g.deadline||''}" style="${isOverdue?'border-color:#ff444488;color:#ff4444':''}" onchange="saveGoalDate('${g.id}','deadline',this.value)"></div>
+        <div><div class="date-lbl" style="${isOverdue?'color:#ff4444':''}">Deadline${isOverdue?' ⚠':''}</div><input class="inp-date" type="date" value="${g.deadline||''}" style="${isOverdue?'border-color:#ff444488;color:#ff4444':''}" onchange="saveGoalDate('${g.id}','deadline',this.value)"></div>
       </div>
     </div>
   </div>`;
@@ -1065,13 +1065,13 @@ function renderGoalContent(){
     </div>`;
   }
 
-  h+=`<div class="focus-card"><div class="card-label" style="margin-bottom:8px;color:var(--accent)">Daily Focus <span style="font-weight:400;color:var(--text3)">‚Äî TAP DF ON ANY STEP</span></div>`;
+  h+=`<div class="focus-card"><div class="card-label" style="margin-bottom:8px;color:var(--accent)">Daily Focus <span style="font-weight:400;color:var(--text3)">— TAP DF ON ANY STEP</span></div>`;
   if(focusNodes.length){focusNodes.forEach(n=>{const isSel=activeStepId===n.id;const sp=timers[n.id]?timers[n.id].done:0;h+=`<div class="focus-item${isSel?' act':''}" onclick="selectStep('${n.id}')">
     <div style="width:6px;height:6px;border-radius:1px;background:${isSel?'var(--accent)':'var(--text4)'};flex-shrink:0"></div>
     <span style="flex:1;font-size:15px;color:${isSel?'var(--accent-d)':'var(--text2)'};font-weight:${isSel?'600':'400'}">${esc(n.name)}</span>
     ${sp>0?`<span style="font-size:10px;color:var(--accent-d);font-weight:600">${sp} sp</span>`:''}
-    <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();toggleFocus('${n.id}')">‚úï</button>
-  </div>`;});}else{h+=`<div style="font-size:12px;color:var(--text3);padding:6px 0;font-family:var(--mono);text-transform:uppercase;letter-spacing:.1em">No items ‚Äî tap DF on any step</div>`;}
+    <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();toggleFocus('${n.id}')">✕</button>
+  </div>`;});}else{h+=`<div style="font-size:12px;color:var(--text3);padding:6px 0;font-family:var(--mono);text-transform:uppercase;letter-spacing:.1em">No items — tap DF on any step</div>`;}
   h+=`</div>`;
 
   h+=`<div class="card"><div class="card-label">Pipeline</div>
@@ -1084,20 +1084,20 @@ function renderGoalContent(){
 
 function setDur(min){const t=timers[activeStepId];if(t&&t.running)return;swMode=false;sprintDur=min;if(t){t.sec=min*60;t.total=min*60;}saveAll();renderGoalContent();}
 function setSwMode(){if(timers[activeStepId]&&timers[activeStepId].running)return;swMode=true;swRunning=false;swSec=0;renderGoalContent();}
-function toggleSW(){swRunning=!swRunning;if(swRunning){swInt=setInterval(()=>{swSec++;renderGoalContent();},1000);}else{clearInterval(swInt);swInt=null;if(swSec>0){const t=timers[activeStepId];if(t)t.done++;const node=findNode(activeStepId,goals);history.push({type:'sprint',name:node?node.name:'',date:TODAY,stepId:activeStepId,duration:swSec});swSec=0;saveAll();awardXP(10,'SPRINT');const chain=getChainDataForDate(TODAY);if(chain.badge)showNotify(chain.badge.label+' +'+chain.badge.xpBonus+'XP BONUS',2500);}renderGoalContent();showNotify('Sprint done ‚úì');}}
+function toggleSW(){swRunning=!swRunning;if(swRunning){swInt=setInterval(()=>{swSec++;renderGoalContent();},1000);}else{clearInterval(swInt);swInt=null;if(swSec>0){const t=timers[activeStepId];if(t)t.done++;const node=findNode(activeStepId,goals);history.push({type:'sprint',name:node?node.name:'',date:TODAY,stepId:activeStepId,duration:swSec});swSec=0;saveAll();awardXP(10,'SPRINT');const chain=getChainDataForDate(TODAY);if(chain.badge)showNotify(chain.badge.label+' +'+chain.badge.xpBonus+'XP BONUS',2500);}renderGoalContent();showNotify('Sprint done ✓');}}
 function resetSW(){clearInterval(swInt);swInt=null;swRunning=false;swSec=0;renderGoalContent();}
 function toggleTimer(){
   const t=timers[activeStepId];if(!t)return;
   if(t.running){clearInterval(timerInt);timerInt=null;t.running=false;}
   else{t.running=true;clearInterval(timerInt);
     timerInt=setInterval(()=>{const tt=timers[activeStepId];if(!tt||!tt.running){clearInterval(timerInt);timerInt=null;return;}tt.sec--;
-      if(tt.sec<=0){tt.done++;tt.running=false;tt.sec=tt.total;const node=findNode(activeStepId,goals);history.push({type:'sprint',name:node?node.name:'',date:TODAY,stepId:activeStepId,duration:sprintDur*60});clearInterval(timerInt);timerInt=null;saveAll();awardXP(10,'SPRINT');const chain=getChainDataForDate(TODAY);if(chain.badge)setTimeout(()=>showNotify(chain.badge.label+' +'+chain.badge.xpBonus+'XP BONUS',2500),500);renderGoalContent();showNotify('Sprint done ‚úì');return;}
+      if(tt.sec<=0){tt.done++;tt.running=false;tt.sec=tt.total;const node=findNode(activeStepId,goals);history.push({type:'sprint',name:node?node.name:'',date:TODAY,stepId:activeStepId,duration:sprintDur*60});clearInterval(timerInt);timerInt=null;saveAll();awardXP(10,'SPRINT');const chain=getChainDataForDate(TODAY);if(chain.badge)setTimeout(()=>showNotify(chain.badge.label+' +'+chain.badge.xpBonus+'XP BONUS',2500),500);renderGoalContent();showNotify('Sprint done ✓');return;}
       saveAll();renderGoalContent();},1000);}
   saveAll();renderGoalContent();
 }
 function resetTimer(){clearInterval(timerInt);timerInt=null;const t=timers[activeStepId];if(t){t.running=false;t.sec=t.total;}saveAll();renderGoalContent();}
 
-// ‚îÄ‚îÄ HABITS ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+// ── HABITS ──────────────────────────────────────
 function getHlog(){return LS('lt2_hlog')||{};}
 function getHabitStreak(hid){const log=getHlog();let s=0,d=new Date();while(true){const k=fmtDate(d);if(log[k]&&log[k][hid])s++;else break;d.setDate(d.getDate()-1);}return s;}
 function calcStreak(){const log=getHlog();let s=0,d=new Date();while(true){const k=fmtDate(d);const done=habits.filter(h=>log[k]&&log[k][h.id]).length;if(done>=Math.max(1,habits.length))s++;else break;d.setDate(d.getDate()-1);}return s;}
@@ -1117,11 +1117,11 @@ function renderHabits(){
     </div>
     <span class="h-name${h.done?' done':''}">${esc(h.name)}</span>
     <span class="h-streak">${getHabitStreak(h.id)}D</span>
-    <button class="btn btn-danger btn-xs" onclick="removeHabit(${i})">√ó</button>
+    <button class="btn btn-danger btn-xs" onclick="removeHabit(${i})">×</button>
   </div>`).join('');
 }
 
-// ‚îÄ‚îÄ HEATMAP (FIXED) ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+// ── HEATMAP (FIXED) ─────────────────────────────
 // Layout: day-label column on LEFT (rows = Mo..Su), then week columns going right.
 // Each week column is flex-direction:column with 7 cells = exactly Mo..Su.
 // We start the grid from the Monday of (today - 6 weeks) so day labels always align.
@@ -1152,7 +1152,7 @@ function renderHeatmap(){
     const col=[];
     for(let d=0;d<7;d++){
       const date=new Date(start);
-      date.setDate(start.getDate()+w*7+d); // d=0‚ÜíMon, d=6‚ÜíSun
+      date.setDate(start.getDate()+w*7+d); // d=0→Mon, d=6→Sun
       const k=fmtDate(date);
       const isFut=k>TODAY;
       const dl=log[k]||{};
@@ -1174,12 +1174,12 @@ function renderHeatmap(){
     cols.push(col);
   }
 
-  // Cell size ‚Äî calculate from available width (~440px minus label col 18px minus gaps)
+  // Cell size — calculate from available width (~440px minus label col 18px minus gaps)
   const CELL=13; // px per cell
   const GAP=3;
 
   let h=`<div style="display:flex;align-items:flex-start">`;
-  // Day label column ‚Äî each label height = CELL+GAP px, top offset = month-label row height (16px) + gap (3px)
+  // Day label column — each label height = CELL+GAP px, top offset = month-label row height (16px) + gap (3px)
   h+=`<div style="display:flex;flex-direction:column;gap:${GAP}px;margin-top:${16+GAP}px;margin-right:4px;flex-shrink:0">`;
   WD.forEach(l=>h+=`<div style="font-size:8px;color:var(--text3);height:${CELL}px;width:16px;display:flex;align-items:center;font-family:var(--mono);letter-spacing:.04em">${l}</div>`);
   h+=`</div>`;
@@ -1229,7 +1229,7 @@ function renderCompound(){
   wrap.innerHTML=`<div style="background:var(--bg2);border-radius:3px;padding:12px"><div class="chart-bars">${barsH}</div>${tlH}</div>`;
 }
 
-// ‚îÄ‚îÄ HISTORY ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+// ── HISTORY ──────────────────────────────────────
 function renderCalendar(){
   const now=new Date();const year=now.getFullYear(),month=now.getMonth();
   document.getElementById('cal-lbl').textContent=now.toLocaleDateString('en',{month:'long',year:'numeric'}).toUpperCase();
@@ -1264,7 +1264,7 @@ function renderHistory(){
   const totalGoals=history.filter(h=>h.type==='goal').length;
 
   let html=`<div style="background:var(--accent-dim);border:1.5px solid var(--accent-mid);border-radius:var(--radius);padding:16px;margin-bottom:14px">
-    <div style="font-size:11px;font-weight:600;color:var(--accent-d);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">‚≠ê XP Overview</div>
+    <div style="font-size:11px;font-weight:600;color:var(--accent-d);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">⭐ XP Overview</div>
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
       <div style="background:var(--accent);color:white;font-size:13px;font-weight:700;padding:6px 14px;border-radius:var(--radius-pill)">LVL ${level}</div>
       <div style="flex:1">
@@ -1288,8 +1288,8 @@ function renderHistory(){
       </div>
     </div>
     <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
-      ${mult>1?`<span style="font-size:11px;font-weight:600;padding:4px 12px;border-radius:var(--radius-pill);background:var(--sand-dim);color:#b07030;border:1px solid var(--sand)">√ó${mult} multiplier active</span>`:''}
-      ${focusStr>0?`<span style="font-size:11px;font-weight:600;padding:4px 12px;border-radius:var(--radius-pill);background:var(--sky-dim);color:#5090b0;border:1px solid rgba(168,196,212,0.4)">üî• ${focusStr}d focus streak</span>`:''}
+      ${mult>1?`<span style="font-size:11px;font-weight:600;padding:4px 12px;border-radius:var(--radius-pill);background:var(--sand-dim);color:#b07030;border:1px solid var(--sand)">×${mult} multiplier active</span>`:''}
+      ${focusStr>0?`<span style="font-size:11px;font-weight:600;padding:4px 12px;border-radius:var(--radius-pill);background:var(--sky-dim);color:#5090b0;border:1px solid rgba(168,196,212,0.4)">🔥 ${focusStr}d focus streak</span>`:''}
     </div>
   </div>`;
 
@@ -1314,7 +1314,7 @@ function renderHistory(){
   xpEl.innerHTML=html;
 }
 
-// ‚îÄ‚îÄ WHEEL ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+// ── WHEEL ─────────────────────────────────────────
 const WHEEL_ALL=[
   {name:'T1',color:'#f5d020',textColor:'#5a4a00',weight:40,reward:'Phone for 10 min'},
   {name:'T2',color:'#4a90d9',textColor:'#ffffff',weight:30,reward:'Favourite snack'},
@@ -1388,8 +1388,8 @@ function wheelNearMissEffect(winnerColor){
 }
 function wheelSpin(){
   if(wheelSpinning)return;wheelSpinning=true;
-  const btn=document.getElementById('wheel-spin-btn');if(btn){btn.disabled=true;btn.textContent='Spinning‚Ä¶';}
-  document.getElementById('wheel-result').innerHTML=`<div style="font-size:13px;color:var(--text3)">‚Ä¶</div>`;
+  const btn=document.getElementById('wheel-spin-btn');if(btn){btn.disabled=true;btn.textContent='Spinning…';}
+  document.getElementById('wheel-result').innerHTML=`<div style="font-size:13px;color:var(--text3)">…</div>`;
   const winnerName=wheelPickWinner();const{angle:targetAngle,nearMiss,seg}=wheelTargetAngle(winnerName);
   const extraSpins=(6+Math.floor(Math.random()*4))*Math.PI*2;
   const cur=wheelAngle%(Math.PI*2);let delta=(targetAngle-cur+Math.PI*2*20)%(Math.PI*2);
@@ -1419,7 +1419,7 @@ function wheelSpin(){
 }
 function wheelSetPin(id){
   wheelActivePin=id;LSS('lt2_wheel_pin',id);wheelRenderPins();wheelDrawStatic();
-  document.getElementById('wheel-result').innerHTML=`<div style="font-size:13px;color:var(--text3)">Pin changed ‚Äî ready to spin</div>`;
+  document.getElementById('wheel-result').innerHTML=`<div style="font-size:13px;color:var(--text3)">Pin changed — ready to spin</div>`;
   const btn=document.getElementById('wheel-spin-btn');if(btn)btn.textContent='Spin';
 }
 function wheelRenderPins(){
@@ -1510,29 +1510,29 @@ function wheelTableRender(){
   wrap.innerHTML=h;
 }
 
-// ‚îÄ‚îÄ BOREDOM PROTOCOL ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+// ── BOREDOM PROTOCOL ───────────────────────────────────
 const BP_PHASES=[
   {id:'p1',num:1,label:'Baseline mapping',sub:'See your stimulation-seeking pattern without changing it',dayStart:1,dayEnd:5,
    rules:[
-    'Log every reach-for-stimulation moment ‚Äî phone check, tab switch, snack, music change. Just the trigger and time.',
+    'Log every reach-for-stimulation moment — phone check, tab switch, snack, music change. Just the trigger and time.',
     'Run one 10-minute naked sit daily. No input, no task. Note the minute the first urge appears.',
-    'Change nothing else. Visibility only ‚Äî restricting now causes the relapse pattern from before.'
+    'Change nothing else. Visibility only — restricting now causes the relapse pattern from before.'
    ]},
   {id:'p2',num:2,label:'Friction, not removal',sub:'Raise the cost of low-value stimulation without banning it',dayStart:6,dayEnd:18,
    rules:[
     '10-second rule: before any reach-for-stimulation, wait 10 seconds and silently name the trigger. Then choose freely.',
-    'Extend the naked sit by 2 minutes every 3 days ‚Äî 10 ‚Üí 18 min by phase end.',
-    'Add one physical friction point ‚Äî phone in another room during work, app icon removed. One change, not five.'
+    'Extend the naked sit by 2 minutes every 3 days — 10 → 18 min by phase end.',
+    'Add one physical friction point — phone in another room during work, app icon removed. One change, not five.'
    ]},
   {id:'p3',num:3,label:'Substitution with intent',sub:'Route boredom toward self-generated stimulation first',dayStart:19,dayEnd:35,
    rules:[
-    'Self-generated first: when bored, the first move is internal ‚Äî recall a problem, plan a sequence, hum a melody.',
+    'Self-generated first: when bored, the first move is internal — recall a problem, plan a sequence, hum a melody.',
     'Interest menu becomes second priority, not first. Internal generation is the actual target skill.',
-    'One unstimulated transition daily ‚Äî a walk, commute, or queue with zero input.'
+    'One unstimulated transition daily — a walk, commute, or queue with zero input.'
    ]},
   {id:'p4',num:4,label:'Boredom as default state',sub:'Boredom stops registering as aversive',dayStart:36,dayEnd:9999,
    rules:[
-    'Naked sit becomes unscheduled ‚Äî done whenever idle, no timer, no end goal.',
+    'Naked sit becomes unscheduled — done whenever idle, no timer, no end goal.',
     'Monthly check: log one full day of triggers again, compare against phase 1 baseline.',
     'Success marker: stimulation is something you choose for value, not something you reach for to escape a feeling.'
    ]}
@@ -1594,7 +1594,7 @@ function bpRenderLog(){
     return`<div class="bp-log-row">
       <span class="bp-trig-pill">${esc(e.trigger)}</span>
       <span style="flex:1;font-size:12px;color:var(--text3);font-family:var(--mono)">${time}</span>
-      <button class="btn btn-danger btn-xs" onclick="bpRemoveTrigger(${idx})">√ó</button>
+      <button class="btn btn-danger btn-xs" onclick="bpRemoveTrigger(${idx})">×</button>
     </div>`;
   }).join('');
 }
@@ -1655,7 +1655,7 @@ function bpRenderSit(){
   ring.setAttribute('stroke-dashoffset',circ*(1-pct));
   btnEl.textContent=sit.running?'Pause':(sit.elapsed>0?'Resume':'Start');
   if(sit.running)hint.textContent='No input. Note the minute the first urge appears.';
-  else if(sit.elapsed>=sit.target&&sit.target>0)hint.textContent='Complete ‚Äî reset to go again.';
+  else if(sit.elapsed>=sit.target&&sit.target>0)hint.textContent='Complete — reset to go again.';
   bpSitPresets();
 }
 
@@ -1675,7 +1675,7 @@ function bpRenderBaseline(){
   const baseEl=document.getElementById('bp-baseline-val');
   const curEl=document.getElementById('bp-current-val');
   if(!baseEl)return;
-  baseEl.textContent=st.baseline!=null?st.baseline:'‚Äî';
+  baseEl.textContent=st.baseline!=null?st.baseline:'—';
   curEl.textContent=(log[TODAY]||[]).length;
 }
 
@@ -1703,7 +1703,7 @@ function bpRenderPhases(){
     const isLocked=day<p.dayStart;
     const badgeBg=isCur?'var(--accent)':'var(--bg2)';
     const badgeCol=isCur?'white':'var(--text3)';
-    const durLabel=p.dayEnd===9999?'day '+p.dayStart+'+':'days '+p.dayStart+'‚Äì'+p.dayEnd;
+    const durLabel=p.dayEnd===9999?'day '+p.dayStart+'+':'days '+p.dayStart+'–'+p.dayEnd;
     return`<div class="bp-phase${isLocked?' locked':''}">
       <div class="bp-phase-head">
         <span class="bp-phase-badge" style="background:${badgeBg};color:${badgeCol}">phase ${p.num}</span>
