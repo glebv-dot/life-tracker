@@ -332,10 +332,10 @@ textarea.inp{resize:none;line-height:1.6}
     <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <div class="card-label" style="margin-bottom:0" id="h-date-label">Today's habits</div>
-        <div style="display:flex;align-items:center;gap:6px">
-          <button class="btn btn-ghost btn-xs" onclick="shiftHabitDay(-1)">◀</button>
-          <button class="btn btn-ghost btn-xs" id="h-today-btn" onclick="jumpHabitToday()" style="display:none">Today</button>
-          <button class="btn btn-ghost btn-xs" onclick="shiftHabitDay(1)" id="h-next-btn">▶</button>
+        <div style="display:flex;align-items:center;gap:4px">
+          <button onclick="shiftHabitDay(-1)" style="background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:6px 12px;font-size:14px;cursor:pointer;color:var(--text)">◀</button>
+          <button id="h-today-btn" onclick="jumpHabitToday()" style="display:none;background:var(--accent);border:none;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:600;cursor:pointer;color:white">Today</button>
+          <button id="h-next-btn" onclick="shiftHabitDay(1)" style="background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:6px 12px;font-size:14px;cursor:pointer;color:var(--text);opacity:0.3">▶</button>
         </div>
       </div>
       <div id="habit-list"></div>
@@ -364,7 +364,14 @@ textarea.inp{resize:none;line-height:1.6}
   </div>
   <div class="sec">
     <div class="card">
-      <div class="card-label" id="cal-lbl">This month</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div class="card-label" style="margin-bottom:0" id="cal-lbl">This month</div>
+        <div style="display:flex;align-items:center;gap:4px">
+          <button onclick="shiftCalMonth(-1)" style="background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:6px 12px;font-size:14px;cursor:pointer;color:var(--text)">◀</button>
+          <button id="cal-today-btn" onclick="jumpCalToday()" style="display:none;background:var(--accent);border:none;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:600;cursor:pointer;color:white">Now</button>
+          <button id="cal-next-btn" onclick="shiftCalMonth(1)" style="background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:6px 12px;font-size:14px;cursor:pointer;color:var(--text);opacity:0.3">▶</button>
+        </div>
+      </div>
       <table class="cal-table" id="cal-table"></table>
       <div style="display:flex;gap:14px;margin-top:12px;flex-wrap:wrap">
         <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3)"><div style="width:10px;height:10px;border-radius:3px;background:var(--peach-dim);border:1px solid var(--peach-mid)"></div>Sprints</div>
@@ -550,6 +557,7 @@ let woops=LS('lt2_woops')||[];
 let sprintDur=LS('lt2_dur')||5;
 let activeGoalIdx=0,activeStepId=null,timerInt=null;
 let habitViewDate=TODAY;
+let calViewYear=new Date().getFullYear(),calViewMonth=new Date().getMonth();
 let swMode=false,swRunning=false,swSec=0,swInt=null;
 let fwEditingId=null;
 // UI state — not persisted (collapses reset on refresh, intentional)
@@ -1112,6 +1120,24 @@ function resetTimer(){clearInterval(timerInt);timerInt=null;const t=timers[activ
 function getHlog(){return LS('lt2_hlog')||{};}
 function getHabitStreak(hid){const log=getHlog();let s=0,d=new Date();while(true){const k=fmtDate(d);if(log[k]&&log[k][hid])s++;else break;d.setDate(d.getDate()-1);}return s;}
 function calcStreak(){const log=getHlog();let s=0,d=new Date();while(true){const k=fmtDate(d);const done=habits.filter(h=>log[k]&&log[k][h.id]).length;if(done>=Math.max(1,habits.length))s++;else break;d.setDate(d.getDate()-1);}return s;}
+function shiftCalMonth(d){
+  calViewMonth+=d;
+  if(calViewMonth>11){calViewMonth=0;calViewYear++;}
+  if(calViewMonth<0){calViewMonth=11;calViewYear--;}
+  const now=new Date();
+  const isNow=calViewYear===now.getFullYear()&&calViewMonth===now.getMonth();
+  const nextBtn=document.getElementById('cal-next-btn');
+  const todayBtn=document.getElementById('cal-today-btn');
+  if(nextBtn)nextBtn.style.opacity=isNow?'0.3':'1';
+  if(todayBtn)todayBtn.style.display=isNow?'none':'';
+  renderCalendar();
+}
+function jumpCalToday(){
+  const now=new Date();calViewYear=now.getFullYear();calViewMonth=now.getMonth();
+  const nextBtn=document.getElementById('cal-next-btn');const todayBtn=document.getElementById('cal-today-btn');
+  if(nextBtn)nextBtn.style.opacity='0.3';if(todayBtn)todayBtn.style.display='none';
+  renderCalendar();
+}
 function shiftHabitDay(d){const dt=new Date(habitViewDate+'T12:00:00');dt.setDate(dt.getDate()+d);const next=fmtDate(dt);if(next>TODAY)return;habitViewDate=next;renderHabits();}
 function jumpHabitToday(){habitViewDate=TODAY;renderHabits();}
 function toggleHabit(i){
@@ -1263,8 +1289,8 @@ function renderCompound(){
 
 // ── HISTORY ──────────────────────────────────────
 function renderCalendar(){
-  const now=new Date();const year=now.getFullYear(),month=now.getMonth();
-  document.getElementById('cal-lbl').textContent=now.toLocaleDateString('en',{month:'long',year:'numeric'}).toUpperCase();
+  const year=calViewYear,month=calViewMonth;
+  document.getElementById('cal-lbl').textContent=new Date(year,month,1).toLocaleDateString('en',{month:'long',year:'numeric'}).toUpperCase();
   const spByDay={},goByDay={};
   history.forEach(h=>{if(h.type==='sprint')spByDay[h.date]=(spByDay[h.date]||0)+1;if(h.type==='goal')goByDay[h.date]=(goByDay[h.date]||0)+1;});
   const firstDay=new Date(year,month,1).getDay();const daysInMonth=new Date(year,month+1,0).getDate();
