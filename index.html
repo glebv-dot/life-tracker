@@ -333,7 +333,7 @@ textarea.inp{resize:none;line-height:1.6}
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <div class="card-label" style="margin-bottom:0" id="h-date-label">Today's habits</div>
         <div style="display:flex;align-items:center;gap:4px">
-          <button onclick="shiftHabitDay(-1)" style="background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:6px 12px;font-size:14px;cursor:pointer;color:var(--text)">◀</button>
+          <button id="h-prev-btn" style="background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:6px 12px;font-size:14px;cursor:pointer;color:var(--text)">◀</button>
           <button id="h-today-btn" onclick="jumpHabitToday()" style="display:none;background:var(--accent);border:none;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:600;cursor:pointer;color:white">Today</button>
           <button id="h-next-btn" onclick="shiftHabitDay(1)" style="background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:6px 12px;font-size:14px;cursor:pointer;color:var(--text);opacity:0.3">▶</button>
         </div>
@@ -367,7 +367,7 @@ textarea.inp{resize:none;line-height:1.6}
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <div class="card-label" style="margin-bottom:0" id="cal-lbl">This month</div>
         <div style="display:flex;align-items:center;gap:4px">
-          <button onclick="shiftCalMonth(-1)" style="background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:6px 12px;font-size:14px;cursor:pointer;color:var(--text)">◀</button>
+          <button id="cal-prev-btn" style="background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:6px 12px;font-size:14px;cursor:pointer;color:var(--text)">◀</button>
           <button id="cal-today-btn" onclick="jumpCalToday()" style="display:none;background:var(--accent);border:none;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:600;cursor:pointer;color:white">Now</button>
           <button id="cal-next-btn" onclick="shiftCalMonth(1)" style="background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:6px 12px;font-size:14px;cursor:pointer;color:var(--text);opacity:0.3">▶</button>
         </div>
@@ -1506,6 +1506,22 @@ function wheelRenderPins(){
 
 fwRenderList();
 renderXPBar();
+
+// Wire date-nav buttons with touch events for iOS reliability
+(function(){
+  function tap(id, fn){
+    const el=document.getElementById(id);
+    if(!el)return;
+    el.addEventListener('click', fn);
+    el.addEventListener('touchend', function(e){e.preventDefault();fn();});
+  }
+  tap('h-prev-btn', function(){shiftHabitDay(-1);});
+  tap('h-next-btn', function(){shiftHabitDay(1);});
+  tap('h-today-btn', function(){jumpHabitToday();});
+  tap('cal-prev-btn', function(){shiftCalMonth(-1);});
+  tap('cal-next-btn', function(){shiftCalMonth(1);});
+  tap('cal-today-btn', function(){jumpCalToday();});
+})();
 
 // == WHEEL CUSTOM TABLE ==
 function wheelTableLoad(){return LS('lt2_wheel_table')||{cols:['Column 1','Column 2'],rows:[['',''],['','']]};}
