@@ -1764,7 +1764,7 @@ function bpRenderAll(){
     function hdr(){return{'apikey':K,'Authorization':'Bearer '+K,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'};}
     function push(k,v){
       var parsed;try{parsed=JSON.parse(v);}catch(e){parsed=v;}
-      fetch(S+'/rest/v1/'+TN,{method:'POST',headers:hdr(),body:JSON.stringify({user_id:U,data_key:k,data_value:parsed,updated_at:new Date().toISOString()})}).catch(function(){});
+      fetch(S+'/rest/v1/'+TN+'?on_conflict=user_id,data_key',{method:'POST',headers:hdr(),body:JSON.stringify({user_id:U,data_key:k,data_value:parsed,updated_at:new Date().toISOString()})}).catch(function(){});
     }
     // Patch localStorage.setItem so we catch all writes regardless of how LSS is called
     var _set=Storage.prototype.setItem;
