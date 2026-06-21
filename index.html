@@ -330,7 +330,14 @@ textarea.inp{resize:none;line-height:1.6}
       <div class="stat-card"><div class="stat-val" id="h-streak">0d</div><div class="stat-sub">Streak</div></div>
     </div>
     <div class="card">
-      <div class="card-label">Today's habits</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div class="card-label" style="margin-bottom:0" id="h-date-label">Today's habits</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <button class="btn btn-ghost btn-xs" onclick="shiftHabitDay(-1)">◀</button>
+          <button class="btn btn-ghost btn-xs" id="h-today-btn" onclick="jumpHabitToday()" style="display:none">Today</button>
+          <button class="btn btn-ghost btn-xs" onclick="shiftHabitDay(1)" id="h-next-btn">▶</button>
+        </div>
+      </div>
       <div id="habit-list"></div>
       <div class="row" style="margin-top:14px">
         <input class="inp" type="text" id="h-input" placeholder="Add a habit...">
@@ -542,6 +549,7 @@ let history=LS('lt2_history')||[];
 let woops=LS('lt2_woops')||[];
 let sprintDur=LS('lt2_dur')||5;
 let activeGoalIdx=0,activeStepId=null,timerInt=null;
+let habitViewDate=TODAY;
 let swMode=false,swRunning=false,swSec=0,swInt=null;
 let fwEditingId=null;
 // UI state — not persisted (collapses reset on refresh, intentional)
@@ -1104,24 +1112,45 @@ function resetTimer(){clearInterval(timerInt);timerInt=null;const t=timers[activ
 function getHlog(){return LS('lt2_hlog')||{};}
 function getHabitStreak(hid){const log=getHlog();let s=0,d=new Date();while(true){const k=fmtDate(d);if(log[k]&&log[k][hid])s++;else break;d.setDate(d.getDate()-1);}return s;}
 function calcStreak(){const log=getHlog();let s=0,d=new Date();while(true){const k=fmtDate(d);const done=habits.filter(h=>log[k]&&log[k][h.id]).length;if(done>=Math.max(1,habits.length))s++;else break;d.setDate(d.getDate()-1);}return s;}
-function toggleHabit(i){habits[i].done=!habits[i].done;const log=getHlog();if(!log[TODAY])log[TODAY]={};log[TODAY][habits[i].id]=habits[i].done;LSS('lt2_hlog',log);saveAll();if(habits[i].done)awardXP(5,'HABIT');renderHabits();renderHeatmap();renderCompound();renderXPBar();}
+function shiftHabitDay(d){const dt=new Date(habitViewDate+'T12:00:00');dt.setDate(dt.getDate()+d);const next=fmtDate(dt);if(next>TODAY)return;habitViewDate=next;renderHabits();}
+function jumpHabitToday(){habitViewDate=TODAY;renderHabits();}
+function toggleHabit(i){
+  const log=getHlog();
+  if(!log[habitViewDate])log[habitViewDate]={};
+  const cur=!!(log[habitViewDate][habits[i].id]);
+  log[habitViewDate][habits[i].id]=!cur;
+  if(habitViewDate===TODAY)habits[i].done=!cur;
+  LSS('lt2_hlog',log);
+  saveAll();
+  if(!cur&&habitViewDate===TODAY)awardXP(5,'HABIT');
+  renderHabits();renderHeatmap();renderCompound();renderXPBar();
+}
 function removeHabit(i){habits.splice(i,1);saveAll();renderHabits();renderHeatmap();renderCompound();}
 function addHabit(){const inp=document.getElementById('h-input');const name=inp.value.trim();if(!name)return;habits.push({id:uid(),name,color:'var(--accent)',done:false});inp.value='';saveAll();renderHabits();renderHeatmap();renderCompound();}
 
 function renderHabits(){
-  const done=habits.filter(h=>h.done).length;
+  const log=getHlog();
+  const dayLog=log[habitViewDate]||{};
+  const isToday=habitViewDate===TODAY;
+  const done=habits.filter(h=>dayLog[h.id]).length;
   document.getElementById('h-today').textContent=done+'/'+habits.length;
   document.getElementById('h-streak').textContent=calcStreak()+'d';
+  const lbl=document.getElementById('h-date-label');
+  if(lbl)lbl.textContent=isToday?'Today\'s habits':fmtShort(habitViewDate)+' habits';
+  const todayBtn=document.getElementById('h-today-btn');
+  if(todayBtn)todayBtn.style.display=isToday?'none':'';
+  const nextBtn=document.getElementById('h-next-btn');
+  if(nextBtn)nextBtn.style.opacity=isToday?'0.2':'1';
   const list=document.getElementById('habit-list');
   if(!habits.length){list.innerHTML=`<div class="empty-state" style="padding:20px 0">No habits yet</div>`;return;}
-  list.innerHTML=habits.map((h,i)=>`<div class="hab-row">
-    <div class="h-ck" onclick="toggleHabit(${i})" style="${h.done?'background:var(--accent);border-color:var(--accent)':'border-color:var(--border2)'}">
-      ${h.done?`<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1.5 6l3.5 3.5 6-6" stroke="white" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/></svg>`:''}
+  list.innerHTML=habits.map((h,i)=>{const isDone=!!(dayLog[h.id]);return`<div class="hab-row">
+    <div class="h-ck" onclick="toggleHabit(${i})" style="${isDone?'background:var(--accent);border-color:var(--accent)':'border-color:var(--border2)'}">
+      ${isDone?`<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1.5 6l3.5 3.5 6-6" stroke="white" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/></svg>`:''}
     </div>
-    <span class="h-name${h.done?' done':''}">${esc(h.name)}</span>
+    <span class="h-name${isDone?' done':''}">${esc(h.name)}</span>
     <span class="h-streak">${getHabitStreak(h.id)}D</span>
     <button class="btn btn-danger btn-xs" onclick="removeHabit(${i})">×</button>
-  </div>`).join('');
+  </div>`;}).join('');
 }
 
 // ── HEATMAP (FIXED) ─────────────────────────────
@@ -1731,7 +1760,7 @@ function bpRenderAll(){
   // Supabase Sync
   (function(){
     var S='https://vgurpottnlcixzjmatlz.supabase.co',K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZndXJwb3R0bmxjaXh6am1hdGx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDc2MTMsImV4cCI6MjA5NDc4MzYxM30.60bgWxj79Md4eNZYrfnYEQgUNjQr4SJEK27QcTsoRr0',TN='life_tracker_data',U='default';
-    var KEYS=['lt2_goals','lt2_habits','lt2_timers','lt2_history','lt2_woops','lt2_dur','lt2_wheel_pin'];
+    var KEYS=['lt2_goals','lt2_habits','lt2_timers','lt2_history','lt2_woops','lt2_dur','lt2_wheel_pin','lt2_hlog'];
     function hdr(){return{'apikey':K,'Authorization':'Bearer '+K,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'};}
     function push(k,v){
       var parsed;try{parsed=JSON.parse(v);}catch(e){parsed=v;}
@@ -1758,6 +1787,7 @@ function bpRenderAll(){
             woops=LS('lt2_woops')||[];
             sprintDur=LS('lt2_dur')||5;
             wheelActivePin=LS('lt2_wheel_pin')||'yellow';
+            const hlog=LS('lt2_hlog')||{};const td=hlog[TODAY]||{};habits.forEach(h=>{h.done=!!(td[h.id]);});
             if(typeof fwRenderList==='function')fwRenderList();
             if(typeof renderXPBar==='function')renderXPBar();
             if(typeof renderGoalTabs==='function')renderGoalTabs();
