@@ -333,9 +333,9 @@ textarea.inp{resize:none;line-height:1.6}
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <div class="card-label" style="margin-bottom:0" id="h-date-label">Today's habits</div>
         <div style="display:flex;align-items:center;gap:4px">
-          <button id="h-prev-btn" style="background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:6px 12px;font-size:14px;cursor:pointer;color:var(--text)">◀</button>
-          <button id="h-today-btn" onclick="jumpHabitToday()" style="display:none;background:var(--accent);border:none;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:600;cursor:pointer;color:white">Today</button>
-          <button id="h-next-btn" onclick="shiftHabitDay(1)" style="background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:6px 12px;font-size:14px;cursor:pointer;color:var(--text);opacity:0.3">▶</button>
+          <button onclick="shiftHabitDay(-1)" style="background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:8px 14px;font-size:16px;cursor:pointer;color:var(--text);-webkit-tap-highlight-color:transparent">◀</button>
+          <button id="h-today-btn" onclick="jumpHabitToday()" style="display:none;background:var(--accent);border:none;border-radius:8px;padding:8px 12px;font-size:11px;font-weight:600;cursor:pointer;color:white;-webkit-tap-highlight-color:transparent">Today</button>
+          <button id="h-next-btn" onclick="shiftHabitDay(1)" style="background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:8px 14px;font-size:16px;cursor:pointer;color:var(--text);opacity:0.3;-webkit-tap-highlight-color:transparent">▶</button>
         </div>
       </div>
       <div id="habit-list"></div>
@@ -367,9 +367,9 @@ textarea.inp{resize:none;line-height:1.6}
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <div class="card-label" style="margin-bottom:0" id="cal-lbl">This month</div>
         <div style="display:flex;align-items:center;gap:4px">
-          <button id="cal-prev-btn" style="background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:6px 12px;font-size:14px;cursor:pointer;color:var(--text)">◀</button>
-          <button id="cal-today-btn" onclick="jumpCalToday()" style="display:none;background:var(--accent);border:none;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:600;cursor:pointer;color:white">Now</button>
-          <button id="cal-next-btn" onclick="shiftCalMonth(1)" style="background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:6px 12px;font-size:14px;cursor:pointer;color:var(--text);opacity:0.3">▶</button>
+          <button onclick="shiftCalMonth(-1)" style="background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:8px 14px;font-size:16px;cursor:pointer;color:var(--text);-webkit-tap-highlight-color:transparent">◀</button>
+          <button id="cal-today-btn" onclick="jumpCalToday()" style="display:none;background:var(--accent);border:none;border-radius:8px;padding:8px 12px;font-size:11px;font-weight:600;cursor:pointer;color:white;-webkit-tap-highlight-color:transparent">Now</button>
+          <button id="cal-next-btn" onclick="shiftCalMonth(1)" style="background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:8px 14px;font-size:16px;cursor:pointer;color:var(--text);opacity:0.3;-webkit-tap-highlight-color:transparent">▶</button>
         </div>
       </div>
       <table class="cal-table" id="cal-table"></table>
@@ -928,6 +928,18 @@ function getFocusNodes(arr,out=[]){arr.forEach(n=>{if(n.inFocus&&!n.done)out.pus
 
 function addGoalTop(){const inp=document.getElementById('new-goal-inp');const name=inp.value.trim();if(!name)return;goals.push({id:uid(),name,collapsed:false,startDate:'',deadline:'',children:[]});activeGoalIdx=goals.length-1;activeStepId=null;inp.value='';saveAll();renderGoalTabs();renderGoalContent();}
 function selectGoal(i){activeGoalIdx=i;renderGoalTabs();renderGoalContent();}
+function deleteGoal(i){if(!confirm('Delete this goal?'))return;goals.splice(i,1);if(activeGoalIdx>=goals.length)activeGoalIdx=Math.max(0,goals.length-1);saveAll();renderGoalTabs();renderGoalContent();}
+function jumpToHabitDate(k){habitViewDate=k;switchTab('habits');renderHabits();}
+function jumpToHistoryDate(k){
+  const d=new Date(k+'T12:00:00');
+  calViewYear=d.getFullYear();calViewMonth=d.getMonth();
+  renderCalendar();
+  const list=document.getElementById('history-list');
+  if(!list)return;
+  // Highlight the day's entries by scrolling to them
+  const items=list.querySelectorAll('[data-date]');
+  items.forEach(el=>el.style.background=el.dataset.date===k?'var(--accent-dim)':'');
+}
 
 function saveGoalDate(gid,field,val){const g=goals.find(x=>x.id===gid);if(g){g[field]=val;saveAll();renderGoalContent();}}
 function saveNodeDate(nid,field,val){const n=findNode(nid,goals);if(n){n[field]=val;saveAll();renderGoalContent();}}
@@ -1041,10 +1053,13 @@ function renderGoalTabs(){
   el.innerHTML=goals.map((g,i)=>{
     const pct=goalProgress(g);const isOn=i===activeGoalIdx;
     const fillColor=isOn?'rgba(255,255,255,0.85)':goalProgressColor(pct);
-    return`<button class="gtab${isOn?' on':''}" onclick="selectGoal(${i})">
-      <span>${esc(g.name)}</span>
-      <div class="gtab-bar"><div class="gtab-fill" style="width:${pct}%;background:${fillColor}"></div></div>
-    </button>`;
+    return`<div class="gtab${isOn?' on':''}" style="position:relative">
+      <button style="all:unset;display:flex;flex-direction:column;align-items:center;gap:5px;width:100%;cursor:pointer" onclick="selectGoal(${i})">
+        <span>${esc(g.name)}</span>
+        <div class="gtab-bar"><div class="gtab-fill" style="width:${pct}%;background:${fillColor}"></div></div>
+      </button>
+      <button onclick="event.stopPropagation();deleteGoal(${i})" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--peach);border:none;color:white;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0">×</button>
+    </div>`;
   }).join('');
 }
 
@@ -1254,7 +1269,8 @@ function renderHeatmap(){
     h+=`<div style="display:flex;flex-direction:column;gap:${GAP}px;flex:1;min-width:0">`;
     col.forEach(cell=>{
       const ts=cell.isToday?`;outline:2px solid var(--accent);outline-offset:1px;z-index:1;position:relative`:'';
-      h+=`<div class="hm-cell" style="background:${cell.bg}${cell.isFut?';opacity:.2':''}${ts};height:${CELL}px" title="${cell.k}: ${cell.done}/${habits.length}"></div>`;
+      const clickable=!cell.isFut?`onclick="jumpToHabitDate('${cell.k}')" style="background:${cell.bg}${ts};height:${CELL}px;cursor:pointer"`:`style="background:${cell.bg};opacity:.2;height:${CELL}px"`;
+      h+=`<div class="hm-cell" ${clickable} title="${cell.k}: ${cell.done}/${habits.length}"></div>`;
     });
     h+=`</div>`;
   });
@@ -1305,7 +1321,7 @@ function renderCalendar(){
     let extraCls='';
     if(badge&&!go){cls='';extraCls=badge.cls==='ultra'?'cal-badge-ultra':badge.cls==='deep'?'cal-badge-deep':'cal-badge-flow';}
     let cnt='';if(sp&&go)cnt=`${sp}+${go}`;else if(sp)cnt=`${sp}s`;else if(go)cnt=`${go}g`;
-    html+=`<td class="cal-cell${cls?' '+cls:''}${extraCls?' '+extraCls:''}${k===TODAY?' today':''}" title="${k}${badge?' ¬∑ '+badge.label:''}"><div class="cal-day">${day}</div>${cnt?`<div class="cal-cnt">${cnt}</div>`:''}</td>`;
+    html+=`<td class="cal-cell${cls?' '+cls:''}${extraCls?' '+extraCls:''}${k===TODAY?' today':''}" style="cursor:pointer" onclick="jumpToHistoryDate('${k}')" title="${k}${badge?' · '+badge.label:''}"><div class="cal-day">${day}</div>${cnt?`<div class="cal-cnt">${cnt}</div>`:''}</td>`;
     col++;if(col%7===0&&day<daysInMonth)html+=`</tr><tr>`;
   }
   while(col%7!==0){html+=`<td class="cal-cell empty"></td>`;col++;}
@@ -1507,21 +1523,6 @@ function wheelRenderPins(){
 fwRenderList();
 renderXPBar();
 
-// Wire date-nav buttons with touch events for iOS reliability
-(function(){
-  function tap(id, fn){
-    const el=document.getElementById(id);
-    if(!el)return;
-    el.addEventListener('click', fn);
-    el.addEventListener('touchend', function(e){e.preventDefault();fn();});
-  }
-  tap('h-prev-btn', function(){shiftHabitDay(-1);});
-  tap('h-next-btn', function(){shiftHabitDay(1);});
-  tap('h-today-btn', function(){jumpHabitToday();});
-  tap('cal-prev-btn', function(){shiftCalMonth(-1);});
-  tap('cal-next-btn', function(){shiftCalMonth(1);});
-  tap('cal-today-btn', function(){jumpCalToday();});
-})();
 
 // == WHEEL CUSTOM TABLE ==
 function wheelTableLoad(){return LS('lt2_wheel_table')||{cols:['Column 1','Column 2'],rows:[['',''],['','']]};}
