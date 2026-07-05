@@ -351,7 +351,7 @@ textarea.inp{resize:none;line-height:1.6}
     <div class="card">
       <div class="card-label">Compound score — 90 days</div>
       <div id="compound-wrap"></div>
-      <div style="font-size:10px;color:var(--text3);margin-top:8px;font-family:var(--mono);letter-spacing:.08em">+1% PER DAY ¬∑ −3% PER MISS</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:8px;font-family:var(--mono);letter-spacing:.08em">+1% PER DAY · −3% PER MISS</div>
     </div>
   </div>
 </div>
@@ -538,7 +538,7 @@ textarea.inp{resize:none;line-height:1.6}
 const LS=k=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):null}catch{return null}};
 const LSS=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}};
 const uid=()=>Math.random().toString(36).slice(2,9);
-const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const fmtDate=d=>{const x=d||new Date();return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');};
 const TODAY=fmtDate();
 const fmtShort=s=>{if(!s)return'';const d=new Date(s+'T12:00:00');return d.toLocaleDateString('en',{month:'short',day:'numeric'});};
@@ -653,7 +653,7 @@ function renderXPBar(){
   const {level,name,pct,cur,needed}=getLevelProgress(d.total);
   const {cls,label}=getStreakMultiplier();
   const html=`
-    <span class="xp-level">LVL ${level} ¬∑ ${name}</span>
+    <span class="xp-level">LVL ${level} · ${name}</span>
     <div class="xp-track"><div class="xp-fill" style="width:${pct}%"></div></div>
     <span class="xp-nums">${cur}/${needed}</span>
     <span class="xp-mult ${cls}">${label}</span>`;
@@ -820,28 +820,28 @@ function fwRenderEditor(){
     </div>
     <div class="woop-card w">
       <div class="woop-letter" style="color:#9b7fff">W</div>
-      <div style="font-size:15px;font-weight:700;color:#9b7fff;margin-bottom:5px;margin-bottom:5px">Wish</div>
+      <div style="font-size:15px;font-weight:700;color:#9b7fff;margin-bottom:5px">Wish</div>
       <div class="woop-hint">What do you want to accomplish? Be specific and ambitious but realistic.</div>
       <div class="woop-example">"I want to launch a personal brand site with 3 articles within 6 weeks."</div>
       <textarea class="inp" rows="3" placeholder="What do you want to achieve?" oninput="fwSaveField('wish',this.value)">${esc(w.wish||'')}</textarea>
     </div>
     <div class="woop-card o1">
       <div class="woop-letter" style="color:var(--accent)">O</div>
-      <div style="font-size:15px;font-weight:700;color:var(--accent);margin-bottom:5px;margin-bottom:5px">Outcome</div>
+      <div style="font-size:15px;font-weight:700;color:var(--accent);margin-bottom:5px">Outcome</div>
       <div class="woop-hint">Visualise success vividly. How will things be different?</div>
       <div class="woop-example">"I'll have a public presence that attracts opportunities."</div>
       <textarea class="inp" rows="3" placeholder="What does success look like?" oninput="fwSaveField('outcome',this.value)">${esc(w.outcome||'')}</textarea>
     </div>
     <div class="woop-card o2">
       <div class="woop-letter" style="color:var(--accent)">O</div>
-      <div style="font-size:15px;font-weight:700;color:var(--accent);margin-bottom:5px;margin-bottom:5px">Obstacle</div>
+      <div style="font-size:15px;font-weight:700;color:var(--accent);margin-bottom:5px">Obstacle</div>
       <div class="woop-hint">What stands in your way? Focus on internal obstacles.</div>
       <div class="woop-example">"I start without clear done criteria and lose momentum."</div>
       <textarea class="inp" rows="3" placeholder="What might stop you?" oninput="fwSaveField('obstacle',this.value)">${esc(w.obstacle||'')}</textarea>
     </div>
     <div class="woop-card p">
       <div class="woop-letter" style="color:#f5a623">P</div>
-      <div style="font-size:15px;font-weight:700;color:#f5a623;margin-bottom:5px;margin-bottom:5px">Plan</div>
+      <div style="font-size:15px;font-weight:700;color:#f5a623;margin-bottom:5px">Plan</div>
       <div class="woop-hint">Why does this matter? Becomes the goal description.</div>
       <textarea class="inp" rows="3" placeholder="Why is this goal important?" oninput="fwSaveField('overview',this.value)">${esc(w.overview||'')}</textarea>
     </div>
@@ -912,7 +912,7 @@ function fwRenderList(){
   container.innerHTML=woops.map(w=>`<div class="fw-saved-item" onclick="fwOpen('${w.id}')">
     <div>
       <div style="font-size:15px;font-weight:700;margin-bottom:4px;letter-spacing:.02em">${esc(w.title||w.wish||'UNTITLED')}</div>
-      <div style="font-size:10px;color:var(--text3);font-size:11px;color:var(--text3)">${w.created}${w.transferred?' ¬∑ IN GOALS':''} ¬∑ ${(w.plan.steps||[]).length} STEPS</div>
+      <div style="font-size:11px;color:var(--text3)">${w.created}${w.transferred?' · IN GOALS':''} · ${(w.plan.steps||[]).length} STEPS</div>
     </div>
     <div style="display:flex;align-items:center;gap:8px">
       ${w.transferred?`<span style="font-size:10px;padding:2px 8px;border-radius:2px;background:var(--accent-dim);color:var(--accent-d);font-weight:600;letter-spacing:.1em">DONE</span>`:''}
@@ -1036,7 +1036,7 @@ function renderSprintPanel(){
     <button class="dur-btn${swMode?' on':''}" onclick="setSwMode()">Stopwatch</button></div>
     ${timerBlock}
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <div style="font-size:10px;color:var(--text3);font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase">${t.done} OWN ¬∑ ${childSp} SUB ¬∑ ${getDailySprintCount(TODAY)} TODAY</div>
+      <div style="font-size:10px;color:var(--text3);font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase">${t.done} OWN · ${childSp} SUB · ${getDailySprintCount(TODAY)} TODAY</div>
       ${focusStr>0?`<div style="font-size:9px;color:var(--text3);font-family:var(--mono);letter-spacing:.08em">🔥 ${focusStr}D FOCUS STREAK</div>`:''}
     </div>
     <div class="sq-grid" style="gap:3px">${sqs}</div>
@@ -1380,8 +1380,8 @@ function renderHistory(){
       ${goCount?`<span class="hist-pill" style="background:var(--bg3);color:var(--text2)">${goCount} goal${goCount!==1?'s':''}</span>`:''}
     </div>
     ${items.map(item=>{
-      if(item.type==='sprint')return`<div class="hist-item"><div class="hist-dot" style="background:var(--accent)"></div><div><div style="font-size:14px;font-weight:500">${esc(item.name)}</div><div style="font-size:11px;color:var(--text3);margin-top:2px">Sprint ¬∑ ${Math.round((item.duration||0)/60)}m</div></div></div>`;
-      if(item.type==='goal')return`<div class="hist-item"><div class="hist-dot" style="background:#6b9e7a"></div><div><div style="font-size:14px;font-weight:500">${esc(item.name)}</div><div style="font-size:11px;color:var(--text3);margin-top:2px">Goal complete ¬∑ ${item.sprintCount||0} sprints</div></div></div>`;
+      if(item.type==='sprint')return`<div class="hist-item"><div class="hist-dot" style="background:var(--accent)"></div><div><div style="font-size:14px;font-weight:500">${esc(item.name)}</div><div style="font-size:11px;color:var(--text3);margin-top:2px">Sprint · ${Math.round((item.duration||0)/60)}m</div></div></div>`;
+      if(item.type==='goal')return`<div class="hist-item"><div class="hist-dot" style="background:#6b9e7a"></div><div><div style="font-size:14px;font-weight:500">${esc(item.name)}</div><div style="font-size:11px;color:var(--text3);margin-top:2px">Goal complete · ${item.sprintCount||0} sprints</div></div></div>`;
       return'';
     }).join('')}</div>`;
   }).join('');
@@ -1766,7 +1766,7 @@ function bpRenderPhasePills(){
     const col=isCur?'white':isDone?'var(--accent-d)':'var(--text3)';
     return`<div style="flex:1;text-align:center;padding:8px 4px;border-radius:var(--radius-sm);background:${bg};color:${col};font-size:11px;font-weight:600">P${p.num}</div>`;
   }).join('');
-  dayEl.textContent='Day '+day+' ¬∑ '+cur.label;
+  dayEl.textContent='Day '+day+' · '+cur.label;
 }
 
 function bpRenderPhases(){
@@ -1803,25 +1803,55 @@ function bpRenderAll(){
   // Supabase Sync
   (function(){
     var S='https://vgurpottnlcixzjmatlz.supabase.co',K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZndXJwb3R0bmxjaXh6am1hdGx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDc2MTMsImV4cCI6MjA5NDc4MzYxM30.60bgWxj79Md4eNZYrfnYEQgUNjQr4SJEK27QcTsoRr0',TN='life_tracker_data',U='default';
-    var KEYS=['lt2_goals','lt2_habits','lt2_timers','lt2_history','lt2_woops','lt2_dur','lt2_wheel_pin','lt2_hlog'];
-    function hdr(){return{'apikey':K,'Authorization':'Bearer '+K,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'};}
-    function push(k,v){
+    var KEYS=['lt2_goals','lt2_habits','lt2_timers','lt2_history','lt2_woops','lt2_dur','lt2_wheel_pin','lt2_hlog','lt2_xp','lt2_wheel_table','bp_state','bp_log','bp_sit'];
+    var SLOW={lt2_timers:1,bp_sit:1}; // rewritten every second while a timer runs — sync sparsely
+    var pending={},lastSent={},askedSecret=false;
+    function hdr(){
+      var h={'apikey':K,'Authorization':'Bearer '+K,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'};
+      var sec=null;try{sec=localStorage.getItem('lt_sync_secret');}catch(e){}
+      if(sec)h['x-app-secret']=sec;
+      return h;
+    }
+    function send(k,v,keepalive){
       var parsed;try{parsed=JSON.parse(v);}catch(e){parsed=v;}
-      fetch(S+'/rest/v1/'+TN+'?on_conflict=user_id,data_key',{method:'POST',headers:hdr(),body:JSON.stringify({user_id:U,data_key:k,data_value:parsed,updated_at:new Date().toISOString()})}).catch(function(){});
+      fetch(S+'/rest/v1/'+TN+'?on_conflict=user_id,data_key',{method:'POST',headers:hdr(),keepalive:!!keepalive,body:JSON.stringify({user_id:U,data_key:k,data_value:parsed,updated_at:new Date().toISOString()})})
+        .then(function(r){
+          if(r.ok){lastSent[k]=v;}
+          else if((r.status===401||r.status===403)&&!askedSecret){
+            askedSecret=true;
+            var s=prompt('Sync is locked. Enter your sync password to enable cross-device sync (Cancel = keep data on this device only):');
+            if(s){try{localStorage.setItem('lt_sync_secret',s);}catch(e){}askedSecret=false;send(k,v);}
+          }
+        }).catch(function(){});
+    }
+    // Debounce + skip unchanged values, so timer ticks don't flood the network
+    function queue(k){
+      clearTimeout(pending[k]);
+      pending[k]=setTimeout(function(){
+        var cur=null;try{cur=localStorage.getItem(k);}catch(e){}
+        if(cur!==null&&cur!==lastSent[k])send(k,cur);
+      },SLOW[k]?15000:1500);
     }
     // Patch localStorage.setItem so we catch all writes regardless of how LSS is called
     var _set=Storage.prototype.setItem;
     Storage.prototype.setItem=function(k,v){
       _set.call(this,k,v);
-      if(KEYS.indexOf(k)!==-1)push(k,v);
+      if(this===localStorage&&KEYS.indexOf(k)!==-1&&v!==lastSent[k])queue(k);
     };
+    window.addEventListener('pagehide',function(){
+      KEYS.forEach(function(k){
+        clearTimeout(pending[k]);
+        var cur=null;try{cur=localStorage.getItem(k);}catch(e){}
+        if(cur!==null&&cur!==lastSent[k])send(k,cur,true);
+      });
+    });
     // On load: fetch from Supabase and hydrate, then re-render
     window.addEventListener('load',function(){
       fetch(S+'/rest/v1/'+TN+'?user_id=eq.'+U+'&select=data_key,data_value',{headers:hdr()})
         .then(function(r){return r.json();})
         .then(function(rows){
           if(!Array.isArray(rows)||rows.length===0)return;
-          rows.forEach(function(r){if(r.data_key)try{_set.call(localStorage,r.data_key,JSON.stringify(r.data_value));}catch(e){}});
+          rows.forEach(function(r){if(r.data_key){var s=JSON.stringify(r.data_value);try{_set.call(localStorage,r.data_key,s);lastSent[r.data_key]=s;}catch(e){}}});
           try{
             goals=LS('lt2_goals')||[];
             habits=LS('lt2_habits')||habits;
