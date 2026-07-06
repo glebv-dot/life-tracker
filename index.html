@@ -1630,8 +1630,17 @@ function bpDayNumber(){
   return Math.floor((now-start)/86400000)+1;
 }
 function bpCurrentPhase(){
+  // Manual override (set by tapping a phase pill/card) wins over the day-based phase.
+  const st=bpGetState();
+  if(st.activePhase){const m=BP_PHASES.find(p=>p.id===st.activePhase);if(m)return m;}
   const day=bpDayNumber();
   return BP_PHASES.find(p=>day>=p.dayStart&&day<=p.dayEnd)||BP_PHASES[BP_PHASES.length-1];
+}
+function bpSetPhase(id){
+  const st=bpGetState();
+  if(id==='auto')delete st.activePhase;else st.activePhase=id;
+  bpSaveState(st);
+  bpRenderAll();
 }
 
 function bpLogTrigger(trigger){
@@ -1758,28 +1767,29 @@ function bpRenderPhasePills(){
   const el=document.getElementById('bp-phase-pills');const dayEl=document.getElementById('bp-day-count');
   if(!el)return;
   const day=bpDayNumber();
+  const st=bpGetState();
   const cur=bpCurrentPhase();
+  const manual=!!st.activePhase;
   el.innerHTML=BP_PHASES.map(p=>{
     const isCur=p.id===cur.id;
-    const isDone=day>p.dayEnd;
+    const isDone=p.num<cur.num;
     const bg=isCur?'var(--accent)':isDone?'var(--accent-dim)':'var(--bg2)';
     const col=isCur?'white':isDone?'var(--accent-d)':'var(--text3)';
-    return`<div style="flex:1;text-align:center;padding:8px 4px;border-radius:var(--radius-sm);background:${bg};color:${col};font-size:11px;font-weight:600">P${p.num}</div>`;
+    return`<div onclick="bpSetPhase('${p.id}')" title="Switch to phase ${p.num}" style="flex:1;text-align:center;padding:8px 4px;border-radius:var(--radius-sm);background:${bg};color:${col};font-size:11px;font-weight:600;cursor:pointer">P${p.num}</div>`;
   }).join('');
-  dayEl.textContent='Day '+day+' · '+cur.label;
+  if(dayEl)dayEl.innerHTML='Day '+day+' · '+esc(cur.label)+(manual?` · <span onclick="bpSetPhase('auto')" style="cursor:pointer;color:var(--accent-d);text-decoration:underline">manual · tap for auto</span>`:'');
 }
 
 function bpRenderPhases(){
   const el=document.getElementById('bp-phases');if(!el)return;
-  const day=bpDayNumber();
   const cur=bpCurrentPhase();
   el.innerHTML=BP_PHASES.map(p=>{
     const isCur=p.id===cur.id;
-    const isLocked=day<p.dayStart;
+    const isLocked=p.num>cur.num;
     const badgeBg=isCur?'var(--accent)':'var(--bg2)';
     const badgeCol=isCur?'white':'var(--text3)';
     const durLabel=p.dayEnd===9999?'day '+p.dayStart+'+':'days '+p.dayStart+'–'+p.dayEnd;
-    return`<div class="bp-phase${isLocked?' locked':''}">
+    return`<div class="bp-phase${isLocked?' locked':''}" onclick="bpSetPhase('${p.id}')" style="cursor:pointer">
       <div class="bp-phase-head">
         <span class="bp-phase-badge" style="background:${badgeBg};color:${badgeCol}">phase ${p.num}</span>
         <span class="bp-phase-title">${esc(p.label)}</span>
