@@ -31,7 +31,7 @@ Rules:
 6. Respect the stated starting point, constraints, deadline, and weekly capacity. Prefer the smallest sufficient plan; omit motivational filler and recurring habits.
 7. Include validation, testing, or completion checks where the goal needs them. Do not duplicate tasks.
 8. Return only valid JSON with this exact shape:
-{"title":"concise goal title","overview":"one-sentence definition of done","children":[{"name":"milestone","children":[{"name":"action","children":[]}]}]}`;
+{"title":"concise goal title","overview":"one-sentence definition of done","children":[{"name":"milestone","children":[{"name":"action","children":[]}]}]}
 
 The user will review and edit the tree before saving it.`;
   const prompt = `GOAL: ${context.title}\nDEFINITION OF DONE: ${context.done}\nCURRENT SITUATION / RESOURCES: ${context.situation || "Not specified"}\nCONSTRAINTS / PREFERENCES: ${context.constraints || "Not specified"}\nDEADLINE: ${context.deadline || "No fixed deadline"}\nAVAILABLE TIME: ${context.hours} hours per week`;
