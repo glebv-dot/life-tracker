@@ -121,6 +121,24 @@ textarea.inp{resize:none;line-height:1.6}
 .gtab.on .gtab-bar{background:rgba(255,255,255,0.25)}
 .gtab-fill{height:100%;border-radius:2px;transition:width .4s cubic-bezier(.4,0,.2,1)}
 .new-goal-row{display:flex;gap:8px;padding:12px 20px 0}
+.ai-goal-row{padding:10px 20px 0}
+.ai-modal{display:none;position:fixed;inset:0;z-index:600;background:rgba(44,44,44,.45);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);align-items:flex-end;justify-content:center}
+.ai-modal.open{display:flex}
+.ai-modal-inner{width:100%;max-width:480px;max-height:92dvh;overflow:auto;background:var(--bg1);border-radius:24px 24px 0 0;padding:18px 20px calc(20px + var(--safe-bottom));box-shadow:0 -8px 40px var(--shadow2)}
+.ai-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
+.ai-modal-title{font-size:20px;font-weight:700;letter-spacing:-.2px}
+.ai-modal-sub{font-size:12px;color:var(--text3);line-height:1.5;margin-top:4px}
+.ai-field{margin-bottom:12px}
+.ai-field label{display:block;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin:0 0 5px 2px}
+.ai-two{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.ai-tip{font-size:11px;line-height:1.55;color:var(--text2);background:var(--accent-dim);border:1px solid var(--accent-mid);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:14px}
+.ai-draft-node{border-left:2px solid var(--accent-mid);padding-left:10px;margin:8px 0}
+.ai-draft-row{display:flex;gap:5px;align-items:center}
+.ai-draft-row .inp{padding:8px 10px;font-size:12px}
+.ai-draft-kids{padding-left:12px}
+.ai-actions{display:flex;gap:8px;margin-top:14px}
+.ai-spinner{width:22px;height:22px;border:3px solid var(--bg3);border-top-color:var(--accent);border-radius:50%;animation:ai-spin .8s linear infinite;margin:18px auto 10px}
+@keyframes ai-spin{to{transform:rotate(360deg)}}
 
 /* GANTT */
 .gantt-wrap{background:var(--bg1);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;box-shadow:0 2px 12px var(--shadow)}
@@ -315,6 +333,7 @@ textarea.inp{resize:none;line-height:1.6}
     <input class="inp" type="text" id="new-goal-inp" placeholder="New goal name..." onkeydown="if(event.key==='Enter')addGoalTop()">
     <button class="btn btn-purple" onclick="addGoalTop()">+ Add</button>
   </div>
+  <div class="ai-goal-row"><button class="btn btn-green" style="width:100%" onclick="openGoalBreakdown()">✦ Break down a goal with AI</button></div>
   <div class="sec" id="goal-content"></div>
 </div>
 
@@ -517,6 +536,17 @@ textarea.inp{resize:none;line-height:1.6}
       </div>
     </div>
     <div class="gantt-modal-body" id="gantt-modal-body"></div>
+  </div>
+</div>
+
+<!-- AI GOAL BREAKDOWN MODAL -->
+<div class="ai-modal" id="ai-goal-modal" onclick="if(event.target===this)closeGoalBreakdown()">
+  <div class="ai-modal-inner">
+    <div class="ai-modal-head">
+      <div><div class="ai-modal-title">Break down a goal</div><div class="ai-modal-sub">Give the planner enough reality to work with, then review every step before saving.</div></div>
+      <button class="btn btn-ghost btn-xs" onclick="closeGoalBreakdown()" aria-label="Close goal breakdown">✕</button>
+    </div>
+    <div id="ai-goal-body"></div>
   </div>
 </div>
 
@@ -925,6 +955,64 @@ function fwRenderList(){
 function findNode(id,arr){for(const n of arr){if(n.id===id)return n;const f=findNode(id,n.children);if(f)return f;}return null;}
 function countChildSp(node){let t=0;node.children.forEach(c=>{const tm=timers[c.id];if(tm)t+=tm.done;t+=countChildSp(c);});return t;}
 function getFocusNodes(arr,out=[]){arr.forEach(n=>{if(n.inFocus&&!n.done)out.push(n);getFocusNodes(n.children,out);});return out;}
+
+let aiGoalDraft=null,aiGoalContext=null;
+function openGoalBreakdown(){
+  const quick=document.getElementById('new-goal-inp');
+  aiGoalDraft=null;aiGoalContext={title:quick?quick.value.trim():'',done:'',situation:'',constraints:'',deadline:'',hours:'5'};
+  document.getElementById('ai-goal-modal').classList.add('open');
+  renderGoalBreakdownForm();
+}
+function closeGoalBreakdown(){document.getElementById('ai-goal-modal').classList.remove('open');}
+function aiVal(id){const el=document.getElementById(id);return el?el.value.trim():'';}
+function renderGoalBreakdownForm(error){
+  const c=aiGoalContext||{};
+  document.getElementById('ai-goal-body').innerHTML=`
+    <div class="ai-tip"><strong>For a precise breakdown:</strong> define the observable finish line, describe your starting point, and state hard constraints. Unknowns will become research tasks instead of invented assumptions.</div>
+    <div class="ai-field"><label>Goal</label><input class="inp" id="aig-title" value="${esc(c.title||'')}" placeholder="Launch my consulting website"></div>
+    <div class="ai-field"><label>Definition of done</label><textarea class="inp" id="aig-done" rows="2" placeholder="What must be observably true when this is complete?">${esc(c.done||'')}</textarea></div>
+    <div class="ai-field"><label>Current situation / resources</label><textarea class="inp" id="aig-situation" rows="2" placeholder="What already exists? What skills, budget or help do you have?">${esc(c.situation||'')}</textarea></div>
+    <div class="ai-field"><label>Constraints and preferences</label><textarea class="inp" id="aig-constraints" rows="2" placeholder="Budget, tools, exclusions, quality bar, fixed commitments…">${esc(c.constraints||'')}</textarea></div>
+    <div class="ai-two">
+      <div class="ai-field"><label>Deadline</label><input class="inp-date" style="padding:11px 12px;font-size:12px" id="aig-deadline" type="date" min="${TODAY}" value="${esc(c.deadline||'')}"></div>
+      <div class="ai-field"><label>Hours per week</label><input class="inp" id="aig-hours" type="number" min="1" max="80" value="${esc(c.hours||'5')}"></div>
+    </div>
+    ${error?`<div style="color:#b04432;background:var(--peach-dim);border:1px solid var(--peach-mid);padding:10px 12px;border-radius:var(--radius-sm);font-size:12px;margin-bottom:12px">${esc(error)}</div>`:''}
+    <button class="btn btn-purple" style="width:100%;padding:13px" onclick="generateGoalBreakdown()">Generate breakdown</button>`;
+}
+async function generateGoalBreakdown(){
+  aiGoalContext={title:aiVal('aig-title'),done:aiVal('aig-done'),situation:aiVal('aig-situation'),constraints:aiVal('aig-constraints'),deadline:aiVal('aig-deadline'),hours:aiVal('aig-hours')||'5'};
+  if(!aiGoalContext.title||!aiGoalContext.done){renderGoalBreakdownForm('Goal and definition of done are required.');return;}
+  document.getElementById('ai-goal-body').innerHTML=`<div class="ai-spinner"></div><div style="text-align:center;font-size:13px;color:var(--text2)">Building milestones and executable next actions…</div>`;
+  try{
+    const res=await fetch('/api/breakdown',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(aiGoalContext)});
+    const data=await res.json();if(!res.ok)throw new Error(data.error||'Breakdown failed');
+    aiGoalDraft={title:data.title||aiGoalContext.title,overview:data.overview||aiGoalContext.done,children:normalizeAiNodes(data.children||[]),deadline:aiGoalContext.deadline};
+    if(!aiGoalDraft.children.length)throw new Error('The planner returned no usable steps.');
+    renderAiGoalDraft();
+  }catch(e){renderGoalBreakdownForm(e.message||'Could not generate the breakdown.');}
+}
+function normalizeAiNodes(nodes){return(Array.isArray(nodes)?nodes:[]).slice(0,8).map(n=>({id:uid(),name:String(n&&n.name||'').trim(),children:normalizeAiNodes(n&&n.children)})).filter(n=>n.name);}
+function findAiNode(id,arr){for(const n of arr){if(n.id===id)return n;const f=findAiNode(id,n.children);if(f)return f;}return null;}
+function renderAiNode(n){return`<div class="ai-draft-node"><div class="ai-draft-row"><input class="inp" value="${esc(n.name)}" oninput="updateAiNode('${n.id}',this.value)"><button class="btn btn-ghost btn-xs" onclick="addAiChild('${n.id}')" title="Add subtask">+</button><button class="btn btn-danger btn-xs" onclick="removeAiNode('${n.id}')" title="Remove">×</button></div>${n.children.length?`<div class="ai-draft-kids">${n.children.map(renderAiNode).join('')}</div>`:''}</div>`;}
+function renderAiGoalDraft(){
+  document.getElementById('ai-goal-body').innerHTML=`<div class="ai-tip">Review the sequence. Rename vague items, remove anything unnecessary, and add missing steps. Nothing is saved until you press <strong>Add to Goals</strong>.</div>
+    <div class="ai-field"><label>Goal title</label><input class="inp" value="${esc(aiGoalDraft.title)}" oninput="aiGoalDraft.title=this.value"></div>
+    <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin:14px 0 6px">Milestones and tasks</div>
+    <div>${aiGoalDraft.children.map(renderAiNode).join('')}</div>
+    <button class="btn btn-green btn-xs" onclick="addAiRoot()">+ Add milestone</button>
+    <div class="ai-actions"><button class="btn" style="flex:1" onclick="renderGoalBreakdownForm()">Adjust inputs</button><button class="btn btn-purple" style="flex:1" onclick="pushAiGoal()">Add to Goals →</button></div>`;
+}
+function updateAiNode(id,value){const n=findAiNode(id,aiGoalDraft.children);if(n)n.name=value;}
+function addAiChild(id){const n=findAiNode(id,aiGoalDraft.children);if(n){n.children.push({id:uid(),name:'New subtask',children:[]});renderAiGoalDraft();}}
+function addAiRoot(){aiGoalDraft.children.push({id:uid(),name:'New milestone',children:[]});renderAiGoalDraft();}
+function removeAiNode(id){function del(arr){const i=arr.findIndex(n=>n.id===id);if(i>=0){arr.splice(i,1);return true;}return arr.some(n=>del(n.children));}del(aiGoalDraft.children);renderAiGoalDraft();}
+function aiToGoalNodes(nodes){return nodes.filter(n=>n.name.trim()).map(n=>({id:uid(),name:n.name.trim(),done:false,collapsed:false,inFocus:false,startDate:'',deadline:'',children:aiToGoalNodes(n.children)}));}
+function pushAiGoal(){
+  const name=(aiGoalDraft.title||'').trim(),children=aiToGoalNodes(aiGoalDraft.children);if(!name||!children.length){showNotify('ADD A TITLE AND AT LEAST ONE STEP');return;}
+  goals.push({id:uid(),name,overview:aiGoalDraft.overview||'',collapsed:false,startDate:TODAY,deadline:aiGoalDraft.deadline||'',children:children,fromAI:true});
+  activeGoalIdx=goals.length-1;activeStepId=null;saveAll();renderGoalTabs();renderGoalContent();closeGoalBreakdown();showNotify('AI PLAN ADDED TO GOALS');
+}
 
 function addGoalTop(){const inp=document.getElementById('new-goal-inp');const name=inp.value.trim();if(!name)return;goals.push({id:uid(),name,collapsed:false,startDate:'',deadline:'',children:[]});activeGoalIdx=goals.length-1;activeStepId=null;inp.value='';saveAll();renderGoalTabs();renderGoalContent();}
 function selectGoal(i){activeGoalIdx=i;renderGoalTabs();renderGoalContent();}
