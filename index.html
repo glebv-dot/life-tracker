@@ -582,19 +582,20 @@ let habits=LS('lt2_habits')||[
   {id:'h4',name:'Daily DT',color:'var(--accent)',done:false}
 ];
 let timers=LS('lt2_timers')||{};
+let stopwatch=LS('lt2_stopwatch')||{running:false,elapsed:0,startedAt:null,stepId:null};
 let history=LS('lt2_history')||[];
 let woops=LS('lt2_woops')||[];
 let sprintDur=LS('lt2_dur')||5;
 let activeGoalIdx=0,activeStepId=null,timerInt=null;
 let habitViewDate=TODAY;
 let calViewYear=new Date().getFullYear(),calViewMonth=new Date().getMonth();
-let swMode=false,swRunning=false,swSec=0,swInt=null;
+let swMode=!!stopwatch.running,swRunning=!!stopwatch.running,swSec=0,swInt=null;
 let fwEditingId=null;
 // UI state — not persisted (collapses reset on refresh, intentional)
 let nodeDateState={};  // nodeId -> bool open
 let goalDateState={};  // goalId -> bool open
 
-function saveAll(){LSS('lt2_goals',goals);LSS('lt2_timers',timers);LSS('lt2_habits',habits);LSS('lt2_history',history);LSS('lt2_woops',woops);LSS('lt2_dur',sprintDur);}
+function saveAll(){LSS('lt2_goals',goals);LSS('lt2_timers',timers);LSS('lt2_stopwatch',stopwatch);LSS('lt2_habits',habits);LSS('lt2_history',history);LSS('lt2_woops',woops);LSS('lt2_dur',sprintDur);}
 
 function toggleNodeDates(id){
   nodeDateState[id]=!nodeDateState[id];
@@ -1038,7 +1039,7 @@ function removeNode(id){function del(arr){for(let i=0;i<arr.length;i++){if(arr[i
 function toggleDone(id){const n=findNode(id,goals);if(!n)return;n.done=!n.done;if(n.done){const sc=countChildSp(n)+(timers[id]?timers[id].done:0);history.push({type:'goal',name:n.name,date:TODAY,id,sprintCount:sc});awardXP(100,'GOAL COMPLETE');}else{const idx=[...history].reverse().findIndex(h=>h.type==='goal'&&h.id===id);if(idx>=0)history.splice(history.length-1-idx,1);}saveAll();renderGoalContent();}
 function toggleCollapse(id){const n=findNode(id,goals);if(n)n.collapsed=!n.collapsed;saveAll();renderGoalContent();}
 function toggleFocus(id){const n=findNode(id,goals);if(n)n.inFocus=!n.inFocus;saveAll();renderGoalContent();}
-function selectStep(id){activeStepId=id;if(!timers[id])timers[id]={done:0,running:false,sec:sprintDur*60,total:sprintDur*60};saveAll();renderGoalContent();}
+function selectStep(id){activeStepId=id;if(!timers[id])timers[id]={done:0,running:false,sec:sprintDur*60,total:sprintDur*60};if(stopwatch.running)swMode=stopwatch.stepId===id;saveAll();renderGoalContent();}
 function showInline(id){const el=document.getElementById('ail-'+id);if(el){el.classList.add('open');const inp=document.getElementById('ai-'+id);if(inp)inp.focus();}}
 function hideInline(id){const el=document.getElementById('ail-'+id);if(el)el.classList.remove('open');}
 
@@ -1086,6 +1087,7 @@ function renderSprintPanel(){
   const node=findNode(activeStepId,goals);if(!node)return'';
   if(!timers[activeStepId])timers[activeStepId]={done:0,running:false,sec:sprintDur*60,total:sprintDur*60};
   const t=timers[activeStepId];const childSp=countChildSp(node);
+  if(stopwatch.running&&stopwatch.stepId===activeStepId){swMode=true;swRunning=true;swSec=getStopwatchElapsed();}
   // More squares — show up to 40, always at least 20
   const totalSq=Math.min(40,Math.max(20,t.done+childSp+6));
   let sqs='';
@@ -1205,19 +1207,35 @@ function renderGoalContent(){
 }
 
 function setDur(min){const t=timers[activeStepId];if(t&&t.running)return;swMode=false;sprintDur=min;if(t){t.sec=min*60;t.total=min*60;}saveAll();renderGoalContent();}
-function setSwMode(){if(timers[activeStepId]&&timers[activeStepId].running)return;swMode=true;swRunning=false;swSec=0;renderGoalContent();}
-function toggleSW(){swRunning=!swRunning;if(swRunning){swInt=setInterval(()=>{swSec++;renderGoalContent();},1000);}else{clearInterval(swInt);swInt=null;if(swSec>0){const t=timers[activeStepId];if(t)t.done++;const node=findNode(activeStepId,goals);history.push({type:'sprint',name:node?node.name:'',date:TODAY,stepId:activeStepId,duration:swSec});swSec=0;saveAll();awardXP(10,'SPRINT');const chain=getChainDataForDate(TODAY);if(chain.badge)showNotify(chain.badge.label+' +'+chain.badge.xpBonus+'XP BONUS',2500);}renderGoalContent();showNotify('Sprint done ✓');}}
-function resetSW(){clearInterval(swInt);swInt=null;swRunning=false;swSec=0;renderGoalContent();}
-function toggleTimer(){
-  const t=timers[activeStepId];if(!t)return;
-  if(t.running){clearInterval(timerInt);timerInt=null;t.running=false;}
-  else{t.running=true;clearInterval(timerInt);
-    timerInt=setInterval(()=>{const tt=timers[activeStepId];if(!tt||!tt.running){clearInterval(timerInt);timerInt=null;return;}tt.sec--;
-      if(tt.sec<=0){tt.done++;tt.running=false;tt.sec=tt.total;const node=findNode(activeStepId,goals);history.push({type:'sprint',name:node?node.name:'',date:TODAY,stepId:activeStepId,duration:sprintDur*60});clearInterval(timerInt);timerInt=null;saveAll();awardXP(10,'SPRINT');const chain=getChainDataForDate(TODAY);if(chain.badge)setTimeout(()=>showNotify(chain.badge.label+' +'+chain.badge.xpBonus+'XP BONUS',2500),500);renderGoalContent();showNotify('Sprint done ✓');return;}
-      saveAll();renderGoalContent();},1000);}
-  saveAll();renderGoalContent();
+function setSwMode(){if(timers[activeStepId]&&timers[activeStepId].running)return;if(stopwatch.running&&stopwatch.stepId!==activeStepId){showNotify('Stopwatch is running on another step');return;}swMode=true;swRunning=!!stopwatch.running;swSec=getStopwatchElapsed();renderGoalContent();}
+function getStopwatchElapsed(){return Math.max(0,Math.floor((stopwatch.elapsed||0)+(stopwatch.running&&stopwatch.startedAt?(Date.now()-stopwatch.startedAt)/1000:0)));}
+function ensureStopwatchLoop(){clearInterval(swInt);swInt=null;if(!stopwatch.running)return;swRunning=true;swSec=getStopwatchElapsed();swInt=setInterval(()=>{swSec=getStopwatchElapsed();if(activeStepId===stopwatch.stepId)renderGoalContent();},500);}
+function toggleSW(){
+  if(stopwatch.running){
+    const stepId=stopwatch.stepId,duration=getStopwatchElapsed();clearInterval(swInt);swInt=null;
+    stopwatch={running:false,elapsed:0,startedAt:null,stepId:null};swRunning=false;swSec=0;
+    if(duration>0){if(!timers[stepId])timers[stepId]={done:0,running:false,sec:sprintDur*60,total:sprintDur*60};timers[stepId].done++;const node=findNode(stepId,goals);history.push({type:'sprint',name:node?node.name:'',date:fmtDate(),stepId,duration});saveAll();awardXP(10,'SPRINT');const chain=getChainDataForDate(fmtDate());if(chain.badge)showNotify(chain.badge.label+' +'+chain.badge.xpBonus+'XP BONUS',2500);showNotify('Sprint done ✓');}
+  }else{
+    if(!activeStepId)return;stopwatch={running:true,elapsed:0,startedAt:Date.now(),stepId:activeStepId};swRunning=true;swSec=0;saveAll();ensureStopwatchLoop();
+  }
+  renderGoalContent();
 }
-function resetTimer(){clearInterval(timerInt);timerInt=null;const t=timers[activeStepId];if(t){t.running=false;t.sec=t.total;}saveAll();renderGoalContent();}
+function resetSW(){clearInterval(swInt);swInt=null;stopwatch={running:false,elapsed:0,startedAt:null,stepId:null};swRunning=false;swSec=0;saveAll();renderGoalContent();}
+function finishCountdown(stepId,t){t.done++;t.running=false;t.sec=t.total;delete t.endAt;const node=findNode(stepId,goals);history.push({type:'sprint',name:node?node.name:'',date:fmtDate(),stepId,duration:t.total});saveAll();awardXP(10,'SPRINT');const chain=getChainDataForDate(fmtDate());if(chain.badge)setTimeout(()=>showNotify(chain.badge.label+' +'+chain.badge.xpBonus+'XP BONUS',2500),500);showNotify('Sprint done ✓');}
+function tickCountdowns(){
+  const now=Date.now();let any=false,changed=false;
+  Object.keys(timers).forEach(stepId=>{const t=timers[stepId];if(!t||!t.running)return;any=true;if(!t.endAt)t.endAt=now+Math.max(0,t.sec||0)*1000;const remaining=Math.max(0,Math.ceil((t.endAt-now)/1000));if(t.sec!==remaining){t.sec=remaining;changed=true;}if(remaining<=0){finishCountdown(stepId,t);changed=true;}});
+  if(changed)saveAll();if(activeStepId)renderGoalContent();return any;
+}
+function ensureTimerLoop(){clearInterval(timerInt);timerInt=null;const any=tickCountdowns();if(any)timerInt=setInterval(()=>{if(!tickCountdowns()){clearInterval(timerInt);timerInt=null;}},500);}
+function toggleTimer(){
+  const stepId=activeStepId,t=timers[stepId];if(!t)return;
+  if(t.running){t.sec=Math.max(0,Math.ceil((t.endAt-Date.now())/1000));t.running=false;delete t.endAt;}
+  else{t.running=true;t.endAt=Date.now()+Math.max(0,t.sec||t.total)*1000;}
+  saveAll();renderGoalContent();
+  ensureTimerLoop();
+}
+function resetTimer(){const t=timers[activeStepId];if(t){t.running=false;t.sec=t.total;delete t.endAt;}saveAll();renderGoalContent();ensureTimerLoop();}
 
 // ── HABITS ──────────────────────────────────────
 function getHlog(){return LS('lt2_hlog')||{};}
@@ -1706,7 +1724,7 @@ function bpGetState(){return LS('bp_state')||{startDate:TODAY,baseline:null};}
 function bpSaveState(s){LSS('bp_state',s);}
 function bpGetLog(){return LS('bp_log')||{};} // dateStr -> [{t,trigger}]
 function bpSaveLog(l){LSS('bp_log',l);}
-function bpGetSit(){return LS('bp_sit')||{target:600,elapsed:0,running:false};}
+function bpGetSit(){return LS('bp_sit')||{target:600,elapsed:0,running:false,startedAt:null};}
 function bpSaveSit(s){LSS('bp_sit',s);}
 
 let bpSitInterval=null;
@@ -1782,52 +1800,44 @@ function bpSitSetTarget(sec){
   sit.target=sec;bpSaveSit(sit);
   bpRenderSit();
 }
+function bpSitElapsed(s){return Math.max(0,Math.floor((s.elapsed||0)+(s.running&&s.startedAt?(Date.now()-s.startedAt)/1000:0)));}
+function bpFinishSit(s){s.elapsed=s.target;s.running=false;delete s.startedAt;bpSaveSit(s);clearInterval(bpSitInterval);bpSitInterval=null;showNotify('Naked sit complete');awardXP(15,'NAKED SIT');bpRenderSit();}
+function bpSitTick(){const s=bpGetSit();if(!s.running)return false;if(!s.startedAt){s.startedAt=Date.now();bpSaveSit(s);}if(bpSitElapsed(s)>=s.target){bpFinishSit(s);return false;}bpRenderSit();return true;}
+function bpEnsureSitLoop(){clearInterval(bpSitInterval);bpSitInterval=null;if(bpSitTick())bpSitInterval=setInterval(()=>{if(!bpSitTick()){clearInterval(bpSitInterval);bpSitInterval=null;}},500);}
 function bpSitToggle(){
   const sit=bpGetSit();
   if(sit.running){
-    sit.running=false;bpSaveSit(sit);
+    sit.elapsed=bpSitElapsed(sit);sit.running=false;delete sit.startedAt;bpSaveSit(sit);
     clearInterval(bpSitInterval);bpSitInterval=null;
     bpRenderSit();
   }else{
-    sit.running=true;bpSaveSit(sit);
-    bpSitInterval=setInterval(()=>{
-      const s=bpGetSit();
-      s.elapsed++;bpSaveSit(s);
-      bpRenderSit();
-      if(s.elapsed>=s.target){
-        clearInterval(bpSitInterval);bpSitInterval=null;
-        const s2=bpGetSit();s2.running=false;bpSaveSit(s2);
-        showNotify('Naked sit complete');
-        awardXP(15,'NAKED SIT');
-        bpRenderSit();
-      }
-    },1000);
-    bpRenderSit();
+    sit.running=true;sit.startedAt=Date.now();bpSaveSit(sit);bpEnsureSitLoop();
   }
 }
 function bpSitReset(){
   clearInterval(bpSitInterval);bpSitInterval=null;
-  const sit=bpGetSit();sit.elapsed=0;sit.running=false;bpSaveSit(sit);
+  const sit=bpGetSit();sit.elapsed=0;sit.running=false;delete sit.startedAt;bpSaveSit(sit);
   bpRenderSit();
 }
 function bpRenderSit(){
   const sit=bpGetSit();
+  const elapsed=bpSitElapsed(sit);
   const timeEl=document.getElementById('bp-sit-time');
   const targetEl=document.getElementById('bp-sit-target');
   const btnEl=document.getElementById('bp-sit-btn');
   const ring=document.getElementById('bp-sit-ring');
   const hint=document.getElementById('bp-sit-hint');
   if(!timeEl)return;
-  const m=Math.floor(sit.elapsed/60),s=sit.elapsed%60;
+  const m=Math.floor(elapsed/60),s=elapsed%60;
   timeEl.textContent=m+':'+(s<10?'0':'')+s;
   const tm=Math.floor(sit.target/60);
   targetEl.textContent='/ '+tm+':00';
   const circ=327;
-  const pct=Math.min(1,sit.elapsed/sit.target);
+  const pct=Math.min(1,elapsed/sit.target);
   ring.setAttribute('stroke-dashoffset',circ*(1-pct));
-  btnEl.textContent=sit.running?'Pause':(sit.elapsed>0?'Resume':'Start');
+  btnEl.textContent=sit.running?'Pause':(elapsed>0?'Resume':'Start');
   if(sit.running)hint.textContent='No input. Note the minute the first urge appears.';
-  else if(sit.elapsed>=sit.target&&sit.target>0)hint.textContent='Complete — reset to go again.';
+  else if(elapsed>=sit.target&&sit.target>0)hint.textContent='Complete — reset to go again.';
   bpSitPresets();
 }
 
@@ -1897,6 +1907,18 @@ function bpRenderAll(){
   bpRenderPhasePills();
   bpRenderPhases();
 }
+
+function restoreTimerState(){
+  stopwatch=LS('lt2_stopwatch')||{running:false,elapsed:0,startedAt:null,stepId:null};
+  swRunning=!!stopwatch.running;swSec=getStopwatchElapsed();
+  ensureTimerLoop();ensureStopwatchLoop();bpEnsureSitLoop();
+}
+window.addEventListener('pagehide',function(){
+  tickCountdowns();
+  if(stopwatch.running){stopwatch.elapsed=getStopwatchElapsed();stopwatch.startedAt=Date.now();LSS('lt2_stopwatch',stopwatch);}
+  const sit=bpGetSit();if(sit.running){sit.elapsed=bpSitElapsed(sit);sit.startedAt=Date.now();bpSaveSit(sit);}
+});
+restoreTimerState();
 
   // Supabase Sync
   (function(){
@@ -1972,6 +1994,7 @@ function bpRenderAll(){
             if(typeof wheelRenderPins==='function')wheelRenderPins();
             if(typeof wheelTableRender==='function')wheelTableRender();
             if(typeof bpRenderAll==='function')bpRenderAll();
+            if(typeof restoreTimerState==='function')restoreTimerState();
           }catch(e){}
         }).catch(function(){});
     });
