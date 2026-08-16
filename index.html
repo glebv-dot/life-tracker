@@ -1121,34 +1121,43 @@ function findNodeLocation(id,arr=goals,parentId=null){
 }
 function nodeContains(root,id){return root.id===id||(root.children||[]).some(n=>nodeContains(n,id));}
 function clearNodeDropMarks(){document.querySelectorAll('.p-node.drag-before,.p-node.drag-after').forEach(el=>el.classList.remove('drag-before','drag-after'));}
-function startNodeDrag(event,id){
-  const loc=findNodeLocation(id);if(!loc)return;nodeDragState={id,targetId:null,after:false};
-  event.dataTransfer.effectAllowed='move';event.dataTransfer.setData('text/plain',id);
-  requestAnimationFrame(()=>document.querySelector(`.p-node[data-node-id="${id}"]`)?.classList.add('dragging'));
-}
-function markNodeDrop(event,targetId){
-  if(!nodeDragState||nodeDragState.id===targetId)return;const src=findNodeLocation(nodeDragState.id);if(!src||nodeContains(src.node,targetId))return;
-  event.preventDefault();if(event.stopPropagation)event.stopPropagation();const row=event.currentTarget.querySelector(':scope > .p-row')||event.currentTarget;const r=row.getBoundingClientRect();
-  const after=event.clientY>r.top+r.height/2;clearNodeDropMarks();event.currentTarget.classList.add(after?'drag-after':'drag-before');nodeDragState.targetId=targetId;nodeDragState.after=after;
-}
 function moveNodeRelative(sourceId,targetId,after){
   const source=findNodeLocation(sourceId),targetBefore=findNodeLocation(targetId);if(!source||!targetBefore||sourceId===targetId||nodeContains(source.node,targetId))return false;
   const moved=source.array.splice(source.index,1)[0];const target=findNodeLocation(targetId);if(!target){source.array.splice(source.index,0,moved);return false;}
   target.array.splice(target.index+(after?1:0),0,moved);saveAll();renderGoalContent();showNotify('SUBTASK ORDER UPDATED');return true;
 }
-function dropNode(event,targetId){event.preventDefault();event.stopPropagation();const id=nodeDragState?.id||event.dataTransfer.getData('text/plain');const after=nodeDragState?.targetId===targetId?nodeDragState.after:false;moveNodeRelative(id,targetId,after);endNodeDrag();}
-function endNodeDrag(){clearNodeDropMarks();document.querySelectorAll('.p-node.dragging').forEach(el=>el.classList.remove('dragging'));nodeDragState=null;}
+function initNodeDrag(id,x,y){
+  const loc=findNodeLocation(id);if(!loc)return false;nodeDragState={id,targetId:null,after:false,active:false,startX:x,startY:y};return true;
+}
+function beginMouseNodeDrag(event,id){
+  if(event.button!==0||!initNodeDrag(id,event.clientX,event.clientY))return;event.preventDefault();
+  document.addEventListener('mousemove',trackMouseNodeDrag);document.addEventListener('mouseup',finishMouseNodeDrag,{once:true});
+}
+function trackMouseNodeDrag(event){if(nodeDragState){event.preventDefault();trackNodeDragPoint(event.clientX,event.clientY);}}
+function finishMouseNodeDrag(event){document.removeEventListener('mousemove',trackMouseNodeDrag);finishNodeDragCore(event);}
 function beginTouchNodeDrag(event,id){
-  if(event.pointerType==='mouse')return;event.preventDefault();event.currentTarget.setPointerCapture(event.pointerId);nodeDragState={id,targetId:null,after:false,touch:true};
-  document.querySelector(`.p-node[data-node-id="${id}"]`)?.classList.add('dragging');
+  const touch=event.touches[0];if(!touch||!initNodeDrag(id,touch.clientX,touch.clientY))return;event.preventDefault();
+  document.addEventListener('touchmove',trackTouchNodeDrag,{passive:false});document.addEventListener('touchend',finishTouchNodeDrag,{once:true});document.addEventListener('touchcancel',cancelNodeDrag,{once:true});
 }
-function moveTouchNodeDrag(event){
-  if(!nodeDragState?.touch)return;event.preventDefault();const target=document.elementFromPoint(event.clientX,event.clientY)?.closest('.p-node');
-  if(!target||target.dataset.nodeId===nodeDragState.id)return;markNodeDrop({preventDefault(){},clientY:event.clientY,currentTarget:target},target.dataset.nodeId);
+function trackTouchNodeDrag(event){const touch=event.touches[0];if(nodeDragState&&touch){event.preventDefault();trackNodeDragPoint(touch.clientX,touch.clientY);}}
+function finishTouchNodeDrag(event){document.removeEventListener('touchmove',trackTouchNodeDrag);finishNodeDragCore(event);}
+function trackNodeDragPoint(x,y){
+  if(!nodeDragState)return;const dx=x-nodeDragState.startX,dy=y-nodeDragState.startY;
+  if(!nodeDragState.active&&Math.hypot(dx,dy)<6)return;
+  if(!nodeDragState.active){nodeDragState.active=true;document.querySelector(`.p-node[data-node-id="${nodeDragState.id}"]`)?.classList.add('dragging');}
+  const src=findNodeLocation(nodeDragState.id);if(!src)return;
+  const targets=document.elementsFromPoint(x,y).map(el=>el.closest?.('.p-node')).filter((el,i,arr)=>el&&arr.indexOf(el)===i);
+  const target=targets.find(el=>el.dataset.nodeId!==nodeDragState.id&&!nodeContains(src.node,el.dataset.nodeId));clearNodeDropMarks();
+  if(target){const row=target.querySelector(':scope > .p-row')||target,r=row.getBoundingClientRect(),after=y>r.top+r.height/2;target.classList.add(after?'drag-after':'drag-before');nodeDragState.targetId=target.dataset.nodeId;nodeDragState.after=after;}
+  else{nodeDragState.targetId=null;}
+  if(y<56)window.scrollBy(0,-12);else if(y>window.innerHeight-56)window.scrollBy(0,12);
 }
-function endTouchNodeDrag(event){
-  if(!nodeDragState?.touch)return;event.preventDefault();const{id,targetId,after}=nodeDragState;if(targetId)moveNodeRelative(id,targetId,after);endNodeDrag();
+function finishNodeDragCore(event){
+  if(!nodeDragState)return;event.preventDefault();const{id,targetId,after,active}=nodeDragState;removeNodeDragListeners();if(active&&targetId)moveNodeRelative(id,targetId,after);endNodeDrag();
 }
+function cancelNodeDrag(){removeNodeDragListeners();endNodeDrag();}
+function removeNodeDragListeners(){document.removeEventListener('mousemove',trackMouseNodeDrag);document.removeEventListener('touchmove',trackTouchNodeDrag);document.removeEventListener('mouseup',finishMouseNodeDrag);document.removeEventListener('touchend',finishTouchNodeDrag);document.removeEventListener('touchcancel',cancelNodeDrag);}
+function endNodeDrag(){clearNodeDropMarks();document.querySelectorAll('.p-node.dragging').forEach(el=>el.classList.remove('dragging'));nodeDragState=null;}
 function keyboardMoveNode(event,id){
   if(event.key!=='ArrowUp'&&event.key!=='ArrowDown')return;event.preventDefault();const loc=findNodeLocation(id);if(!loc)return;
   const delta=event.key==='ArrowUp'?-1:1,target=loc.array[loc.index+delta];if(target)moveNodeRelative(id,target.id,delta>0);
@@ -1164,9 +1173,9 @@ function renderPNode(node,depth){
   const deadlineBadge=hasDeadline?`<span class="p-date-badge has-date" style="${isOverdue?'color:#ff4444;border-color:#ff444488':''}">${isOverdue?'⚠ ':''}${fmtShort(node.deadline)}</span>`:'';
   const dOpen=nodeDateState[node.id]||false;
 
-  return`<div class="p-node" data-node-id="${node.id}" ondragover="markNodeDrop(event,'${node.id}')" ondrop="dropNode(event,'${node.id}')">
+  return`<div class="p-node" data-node-id="${node.id}">
     <div class="p-row${sel?' sel':''}">
-    <button class="drag-handle" draggable="true" aria-label="Drag ${esc(node.name)}" title="Drag to reorder · arrow keys also work" ondragstart="startNodeDrag(event,'${node.id}')" ondragend="endNodeDrag()" onpointerdown="beginTouchNodeDrag(event,'${node.id}')" onpointermove="moveTouchNodeDrag(event)" onpointerup="endTouchNodeDrag(event)" onpointercancel="endNodeDrag()" onkeydown="keyboardMoveNode(event,'${node.id}')">↕</button>
+    <button class="drag-handle" aria-label="Drag ${esc(node.name)}" title="Drag to reorder · arrow keys also work" onmousedown="beginMouseNodeDrag(event,'${node.id}')" ontouchstart="beginTouchNodeDrag(event,'${node.id}')" onkeydown="keyboardMoveNode(event,'${node.id}')">↕</button>
     <div class="p-dot${node.done?' done':''}${sel?' act':''}" onclick="toggleDone('${node.id}')"></div>
     <span class="p-name${node.done?' done':''}" onclick="selectStep('${node.id}')" style="font-size:${fs};font-weight:${fw}">${esc(node.name)}</span>
     ${deadlineBadge}

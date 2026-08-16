@@ -15,6 +15,7 @@
 6. Pipeline controls follow-up: compared the current production pipeline (`/private/tmp/life-tracker-before-reorder-pipeline.png`) with the updated pipeline (`/private/tmp/life-tracker-after-reorder-pipeline.png`) at the same app width. Compact actions now have 34px minimum touch targets and larger labels.
 7. Timeline expansion now uses a neutral `◷` timeline symbol with no embedded date, visually distinct from the hierarchy chevrons used to expand or collapse subtasks and consistent across platforms.
 8. Reordering was verified through the drag handle's keyboard-equivalent interaction: the first two subtasks swapped positions, and the new order remained after reload. The same move engine powers mouse and touch dragging.
+9. Drag bug follow-up: replaced the mixed native/pointer-event path with document-level mouse listeners plus dedicated touch listeners. A real mouse drag moved `2 weeks full reboot` below `1 week full reboot`; the new order persisted after reload with zero console errors.
 
 ## Final check
 
@@ -24,7 +25,7 @@
 - Compact tag panel: placed above the goal list; manual entry verified visible and enabled.
 - Goal organization: filter by tag; sort by custom order, name, progress, or deadline.
 - Persistence: goal tags, selected filter, and sort mode use local storage and the existing Supabase sync pipeline.
-- Subtask ordering: mouse drag, touch drag, and arrow-key reordering persist the nested goal tree.
+- Subtask ordering: actual mouse drag and arrow-key reordering are verified; touch uses the same coordinate/drop engine through dedicated non-passive touch listeners. The nested goal tree persists after reload.
 - Local QA safety: Supabase synchronization is disabled only on localhost, preventing test reorders from reaching production data.
 
 final result: passed
