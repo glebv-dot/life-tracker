@@ -80,7 +80,7 @@ textarea.inp{resize:none;line-height:1.6}
 .btn-ghost:hover{color:var(--text);border-color:transparent}
 .btn-danger{background:none;border-color:transparent;color:var(--peach);box-shadow:none}
 .btn-danger:hover{color:#c0503a;border-color:transparent}
-.btn-xs{padding:4px 10px;font-size:11px;border-radius:8px}
+.btn-xs{padding:7px 12px;font-size:12px;border-radius:9px;min-height:34px}
 .sec{padding:14px 20px 0}
 .row{display:flex;gap:8px;align-items:center}
 .divider{height:1px;background:var(--border);margin:8px 0}
@@ -174,6 +174,9 @@ textarea.inp{resize:none;line-height:1.6}
 
 /* PIPELINE */
 .p-node{position:relative;margin-bottom:3px}
+.p-node.dragging{opacity:.45}
+.p-node.drag-before::before,.p-node.drag-after::after{content:'';position:absolute;left:8px;right:8px;height:3px;border-radius:3px;background:var(--accent);z-index:4;pointer-events:none}
+.p-node.drag-before::before{top:-2px}.p-node.drag-after::after{bottom:-2px}
 .p-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius-sm);cursor:pointer;transition:background .1s}
 .p-row:hover{background:var(--bg2)}
 .p-row.sel{background:var(--accent-dim);outline:1.5px solid var(--accent-mid)}
@@ -183,7 +186,12 @@ textarea.inp{resize:none;line-height:1.6}
 .p-dot.act{border-color:var(--accent);background:var(--accent-dim)}
 .p-name{flex:1;font-size:15px;font-weight:500;color:var(--text);line-height:1.3}
 .p-name.done{color:var(--text3);text-decoration:line-through}
-.p-acts{display:flex;gap:2px;align-items:center;flex-shrink:0}
+.p-acts{display:flex;gap:4px;align-items:center;flex-shrink:0}
+.p-acts .btn-xs,.p-acts .date-toggle,.drag-handle{min-width:34px;min-height:34px;padding:6px 9px;display:inline-flex;align-items:center;justify-content:center}
+.p-acts .btn-xs{font-size:14px}
+.drag-handle{border:0;background:transparent;color:var(--text3);border-radius:9px;font-size:17px;font-weight:700;line-height:1;cursor:grab;touch-action:none;flex-shrink:0}
+.drag-handle:hover{color:var(--accent);background:var(--accent-dim)}
+.drag-handle:active{cursor:grabbing}
 .p-kids{padding-left:24px;border-left:2px solid var(--border);margin-left:16px;margin-top:2px}
 .p-sp-badge{font-size:11px;padding:2px 9px;border-radius:var(--radius-pill);background:var(--accent);color:white;flex-shrink:0;font-weight:600}
 .p-date-badge{font-size:10px;padding:2px 8px;border-radius:var(--radius-pill);background:var(--bg3);color:var(--text3);flex-shrink:0;border:1px solid var(--border)}
@@ -198,9 +206,15 @@ textarea.inp{resize:none;line-height:1.6}
 .goal-dates-body.open{max-height:80px;opacity:1;padding:0 18px 14px}
 .date-toggle{display:inline-flex;align-items:center;gap:4px;cursor:pointer;background:none;border:none;color:var(--text3);font-size:10px;font-weight:600;padding:2px 4px;border-radius:6px;transition:color .15s;flex-shrink:0;line-height:1}
 .date-toggle:hover{color:var(--text)}
-.date-toggle .arr{display:inline-block;transition:transform .2s;font-style:normal;font-size:9px;line-height:1}
-.date-toggle.open .arr{transform:rotate(90deg)}
+.date-toggle .timeline-icon{display:inline-block;font-family:var(--mono);font-style:normal;font-size:18px;line-height:1}
+.date-toggle.open{background:var(--accent-dim);color:var(--accent-d)}
 .date-toggle.has{color:var(--accent)}
+
+@media(max-width:480px){
+  .p-row{flex-wrap:wrap;gap:7px;padding:10px 8px}
+  .p-name{min-width:120px}
+  .p-acts{width:100%;padding-left:38px;justify-content:flex-end}
+}
 
 /* FOCUS / SPRINT */
 .focus-card{background:var(--accent-dim);border:1.5px solid var(--accent-mid);border-radius:var(--radius);padding:16px 16px 14px;margin-bottom:12px}
@@ -628,6 +642,7 @@ let fwEditingId=null;
 // UI state — not persisted (collapses reset on refresh, intentional)
 let nodeDateState={};  // nodeId -> bool open
 let goalDateState={};  // goalId -> bool open
+let nodeDragState=null;
 
 function saveAll(){LSS('lt2_goals',goals);LSS('lt2_goal_tags',goalTags);LSS('lt2_goal_sort',goalSort);LSS('lt2_goal_filter',goalTagFilter);LSS('lt2_timers',timers);LSS('lt2_stopwatch',stopwatch);LSS('lt2_habits',habits);LSS('lt2_history',history);LSS('lt2_woops',woops);LSS('lt2_dur',sprintDur);}
 
@@ -1097,6 +1112,48 @@ function selectStep(id){activeStepId=id;if(!timers[id])timers[id]={done:0,runnin
 function showInline(id){const el=document.getElementById('ail-'+id);if(el){el.classList.add('open');const inp=document.getElementById('ai-'+id);if(inp)inp.focus();}}
 function hideInline(id){const el=document.getElementById('ail-'+id);if(el)el.classList.remove('open');}
 
+function findNodeLocation(id,arr=goals,parentId=null){
+  for(let i=0;i<arr.length;i++){
+    const n=arr[i];if(n.id===id)return{node:n,array:arr,index:i,parentId};
+    const found=findNodeLocation(id,n.children||[],n.id);if(found)return found;
+  }
+  return null;
+}
+function nodeContains(root,id){return root.id===id||(root.children||[]).some(n=>nodeContains(n,id));}
+function clearNodeDropMarks(){document.querySelectorAll('.p-node.drag-before,.p-node.drag-after').forEach(el=>el.classList.remove('drag-before','drag-after'));}
+function startNodeDrag(event,id){
+  const loc=findNodeLocation(id);if(!loc)return;nodeDragState={id,targetId:null,after:false};
+  event.dataTransfer.effectAllowed='move';event.dataTransfer.setData('text/plain',id);
+  requestAnimationFrame(()=>document.querySelector(`.p-node[data-node-id="${id}"]`)?.classList.add('dragging'));
+}
+function markNodeDrop(event,targetId){
+  if(!nodeDragState||nodeDragState.id===targetId)return;const src=findNodeLocation(nodeDragState.id);if(!src||nodeContains(src.node,targetId))return;
+  event.preventDefault();if(event.stopPropagation)event.stopPropagation();const row=event.currentTarget.querySelector(':scope > .p-row')||event.currentTarget;const r=row.getBoundingClientRect();
+  const after=event.clientY>r.top+r.height/2;clearNodeDropMarks();event.currentTarget.classList.add(after?'drag-after':'drag-before');nodeDragState.targetId=targetId;nodeDragState.after=after;
+}
+function moveNodeRelative(sourceId,targetId,after){
+  const source=findNodeLocation(sourceId),targetBefore=findNodeLocation(targetId);if(!source||!targetBefore||sourceId===targetId||nodeContains(source.node,targetId))return false;
+  const moved=source.array.splice(source.index,1)[0];const target=findNodeLocation(targetId);if(!target){source.array.splice(source.index,0,moved);return false;}
+  target.array.splice(target.index+(after?1:0),0,moved);saveAll();renderGoalContent();showNotify('SUBTASK ORDER UPDATED');return true;
+}
+function dropNode(event,targetId){event.preventDefault();event.stopPropagation();const id=nodeDragState?.id||event.dataTransfer.getData('text/plain');const after=nodeDragState?.targetId===targetId?nodeDragState.after:false;moveNodeRelative(id,targetId,after);endNodeDrag();}
+function endNodeDrag(){clearNodeDropMarks();document.querySelectorAll('.p-node.dragging').forEach(el=>el.classList.remove('dragging'));nodeDragState=null;}
+function beginTouchNodeDrag(event,id){
+  if(event.pointerType==='mouse')return;event.preventDefault();event.currentTarget.setPointerCapture(event.pointerId);nodeDragState={id,targetId:null,after:false,touch:true};
+  document.querySelector(`.p-node[data-node-id="${id}"]`)?.classList.add('dragging');
+}
+function moveTouchNodeDrag(event){
+  if(!nodeDragState?.touch)return;event.preventDefault();const target=document.elementFromPoint(event.clientX,event.clientY)?.closest('.p-node');
+  if(!target||target.dataset.nodeId===nodeDragState.id)return;markNodeDrop({preventDefault(){},clientY:event.clientY,currentTarget:target},target.dataset.nodeId);
+}
+function endTouchNodeDrag(event){
+  if(!nodeDragState?.touch)return;event.preventDefault();const{id,targetId,after}=nodeDragState;if(targetId)moveNodeRelative(id,targetId,after);endNodeDrag();
+}
+function keyboardMoveNode(event,id){
+  if(event.key!=='ArrowUp'&&event.key!=='ArrowDown')return;event.preventDefault();const loc=findNodeLocation(id);if(!loc)return;
+  const delta=event.key==='ArrowUp'?-1:1,target=loc.array[loc.index+delta];if(target)moveNodeRelative(id,target.id,delta>0);
+}
+
 function renderPNode(node,depth){
   const sel=activeStepId===node.id;const hasC=node.children.length>0;
   const t=timers[node.id];const totalSp=(t?t.done:0)+countChildSp(node);
@@ -1107,13 +1164,15 @@ function renderPNode(node,depth){
   const deadlineBadge=hasDeadline?`<span class="p-date-badge has-date" style="${isOverdue?'color:#ff4444;border-color:#ff444488':''}">${isOverdue?'⚠ ':''}${fmtShort(node.deadline)}</span>`:'';
   const dOpen=nodeDateState[node.id]||false;
 
-  return`<div class="p-node"><div class="p-row${sel?' sel':''}">
+  return`<div class="p-node" data-node-id="${node.id}" ondragover="markNodeDrop(event,'${node.id}')" ondrop="dropNode(event,'${node.id}')">
+    <div class="p-row${sel?' sel':''}">
+    <button class="drag-handle" draggable="true" aria-label="Drag ${esc(node.name)}" title="Drag to reorder · arrow keys also work" ondragstart="startNodeDrag(event,'${node.id}')" ondragend="endNodeDrag()" onpointerdown="beginTouchNodeDrag(event,'${node.id}')" onpointermove="moveTouchNodeDrag(event)" onpointerup="endTouchNodeDrag(event)" onpointercancel="endNodeDrag()" onkeydown="keyboardMoveNode(event,'${node.id}')">↕</button>
     <div class="p-dot${node.done?' done':''}${sel?' act':''}" onclick="toggleDone('${node.id}')"></div>
     <span class="p-name${node.done?' done':''}" onclick="selectStep('${node.id}')" style="font-size:${fs};font-weight:${fw}">${esc(node.name)}</span>
     ${deadlineBadge}
     ${totalSp>0?`<span class="p-sp-badge">${totalSp}SP</span>`:''}
     <div class="p-acts">
-      <button class="date-toggle${dOpen?' open':''}${hasAnyDate?' has':''}" onclick="toggleNodeDates('${node.id}')" title="Toggle dates"><i class="arr">▸</i>${hasAnyDate?'<span style="font-size:9px;margin-left:1px">📅</span>':''}</button>
+      <button class="date-toggle${dOpen?' open':''}${hasAnyDate?' has':''}" onclick="toggleNodeDates('${node.id}')" title="Toggle timeline" aria-label="Toggle timeline for ${esc(node.name)}"><i class="timeline-icon">◷</i></button>
       ${hasC?`<button class="btn btn-ghost btn-xs" onclick="toggleCollapse('${node.id}')" style="font-size:11px">${node.collapsed?'▸':'▾'}</button>`:''}
       <button class="btn btn-ghost btn-xs" onclick="toggleFocus('${node.id}')" style="color:${node.inFocus?'var(--accent)':'var(--text3)'}">DF</button>
       <button class="btn btn-ghost btn-xs" onclick="showInline('${node.id}')">+</button>
@@ -1231,7 +1290,7 @@ function renderGoalContent(){
   h+=`<div class="card" style="margin-bottom:12px">
     <div style="display:flex;align-items:center;justify-content:space-between">
       <div class="card-label" style="margin-bottom:0">Goal dates${gdHas&&!gdOpen?`<span style="margin-left:8px;font-size:9px;color:var(--accent-d);font-weight:600;font-style:normal">${g.startDate?fmtShort(g.startDate):'?'} → ${g.deadline?fmtShort(g.deadline):'?'}${isOverdue?' ⚠':''}</span>`:''}</div>
-      <button class="date-toggle${gdOpen?' open':''}${gdHas?' has':''}" onclick="toggleGoalDates('${g.id}')"><i class="arr">▸</i> <span style="margin-left:2px">DATES</span></button>
+      <button class="date-toggle${gdOpen?' open':''}${gdHas?' has':''}" onclick="toggleGoalDates('${g.id}')"><i class="timeline-icon">◷</i> <span style="margin-left:2px">DATES</span></button>
     </div>
     <div class="goal-dates-body${gdOpen?' open':''}" id="gd-${g.id}">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-top:10px">
@@ -1983,6 +2042,7 @@ restoreTimerState();
 
   // Supabase Sync
   (function(){
+    if(location.hostname==='127.0.0.1'||location.hostname==='localhost')return;
     var S='https://vgurpottnlcixzjmatlz.supabase.co',K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZndXJwb3R0bmxjaXh6am1hdGx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDc2MTMsImV4cCI6MjA5NDc4MzYxM30.60bgWxj79Md4eNZYrfnYEQgUNjQr4SJEK27QcTsoRr0',TN='life_tracker_data',U='default';
     var KEYS=['lt2_goals','lt2_goal_tags','lt2_goal_sort','lt2_goal_filter','lt2_habits','lt2_timers','lt2_history','lt2_woops','lt2_dur','lt2_wheel_pin','lt2_hlog','lt2_xp','lt2_wheel_table','bp_state','bp_log','bp_sit'];
     var SLOW={lt2_timers:1,bp_sit:1}; // rewritten every second while a timer runs — sync sparsely
