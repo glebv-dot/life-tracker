@@ -123,7 +123,8 @@ textarea.inp{resize:none;line-height:1.6}
 .gtab.on .gtab-bar{background:rgba(255,255,255,0.25)}
 .gtab-fill{height:100%;border-radius:2px;transition:width .4s cubic-bezier(.4,0,.2,1)}
 .gtab-delete{position:absolute;top:-10px;right:-7px;width:22px;height:22px;border-radius:50%;background:var(--peach);border:2px solid var(--bg2);color:white;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;z-index:2;box-shadow:0 2px 5px var(--shadow)}
-.gtab-rename{position:absolute;top:-10px;left:-7px;width:22px;height:22px;border-radius:50%;background:var(--bg2);border:2px solid var(--bg2);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;z-index:2;box-shadow:0 2px 5px var(--shadow)}
+.inline-edit{font:inherit;color:var(--text);background:var(--bg1);border:1.5px solid var(--accent);border-radius:var(--radius-sm);padding:3px 8px;outline:none;min-width:0;width:100%}
+.gtab .inline-edit{width:auto;min-width:110px;text-align:center;border-radius:var(--radius-pill)}
 .goal-tag-panel{margin:8px 0 0;padding:8px 10px;background:var(--bg1);border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:0 1px 6px var(--shadow)}
 .goal-tag-panel-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .goal-tag-panel-title{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em}
@@ -271,6 +272,11 @@ textarea.inp{resize:none;line-height:1.6}
 .has-sp .cal-day{color:var(--peach);color:#b05040}
 .has-go .cal-day{color:var(--accent-d)}
 .both .cal-day{color:white}
+#gcal-table{table-layout:fixed}
+.cal-dots{display:flex;justify-content:center;gap:2px;height:5px;margin-top:2px}
+.cal-dots i{width:5px;height:5px;border-radius:50%;display:block}
+.cal-cell.sel{border-color:var(--text2)}
+.cal-cell.today.sel{border-color:var(--accent)}
 .cal-cnt{font-size:8px;color:var(--text3);margin-top:1px}
 .both .cal-cnt{color:rgba(255,255,255,0.7)}
 .hist-day{margin-bottom:18px}
@@ -400,12 +406,16 @@ textarea.inp{resize:none;line-height:1.6}
         </div>
       </div>
       <table class="cal-table" id="gcal-table"></table>
-      <div style="display:flex;gap:14px;margin-top:12px;flex-wrap:wrap">
-        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3)"><div style="width:10px;height:10px;border-radius:3px;background:var(--peach-dim);border:1px solid var(--peach-mid)"></div>Sprint XP</div>
-        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3)"><div style="width:10px;height:10px;border-radius:3px;background:var(--accent-dim);border:1px solid var(--accent-mid)"></div>Goal complete</div>
-        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3)"><div style="width:10px;height:10px;border-radius:3px;background:var(--accent)"></div>Both</div>
+      <div style="display:flex;gap:12px;margin-top:12px;flex-wrap:wrap;font-size:11px;color:var(--text3)">
+        <div style="display:flex;align-items:center;gap:5px"><span style="display:flex;gap:2px"><i style="width:5px;height:5px;border-radius:50%;background:#6b9e7a"></i><i style="width:5px;height:5px;border-radius:50%;background:#e0805a"></i></span>Goal timeline</div>
+        <div style="display:flex;align-items:center;gap:5px"><span style="color:#d4820c">⚑</span>Deadline</div>
+        <div style="display:flex;align-items:center;gap:5px"><span style="color:var(--accent-d)">✓</span>Met</div>
+        <div style="display:flex;align-items:center;gap:5px"><div style="width:10px;height:10px;border-radius:3px;background:var(--accent-dim);border:1px solid var(--accent-mid)"></div>Completed</div>
+        <div style="display:flex;align-items:center;gap:5px"><div style="width:10px;height:10px;border-radius:3px;background:var(--peach-dim);border:1px solid var(--peach-mid)"></div>Sprints</div>
       </div>
     </div>
+    <div class="card"><div class="card-label" id="gcal-day-lbl">Day</div><div id="gcal-day"></div></div>
+    <div class="card"><div class="card-label">Goal timelines</div><div id="gcal-timeline"></div></div>
     <div class="card"><div class="card-label">Monthly summary</div><div id="gcal-summary"></div></div>
   </div>
 </div>
@@ -1098,9 +1108,28 @@ function pushAiGoal(){
 }
 
 function addGoalTop(){const inp=document.getElementById('new-goal-inp');const name=inp.value.trim();if(!name)return;goals.push({id:uid(),name,collapsed:false,startDate:'',deadline:'',children:[]});activeGoalIdx=goals.length-1;activeStepId=null;inp.value='';saveAll();renderGoalTabs();renderGoalContent();}
+let inlineEditing=false,_tap={id:null,t:0,timer:null};
+function tapItem(kind,id,e,single){
+  const now=Date.now();clearTimeout(_tap.timer);
+  if(_tap.id===id&&now-_tap.t<350){_tap.id=null;startInlineEdit(kind,id,e.currentTarget);return;}
+  _tap.id=id;_tap.t=now;_tap.timer=setTimeout(()=>{_tap.id=null;single();},280);
+}
+function startInlineEdit(kind,id,el){
+  const n=kind==='goal'?goals.find(g=>g.id===id):findNode(id,goals);if(!n||inlineEditing)return;
+  const inp=document.createElement('input');inp.type='text';inp.className='inline-edit';inp.value=n.name;inp.maxLength=200;
+  const cs=getComputedStyle(el.querySelector('span')||el);inp.style.fontSize=cs.fontSize;inp.style.fontWeight=cs.fontWeight;
+  const host=kind==='goal'?el.closest('.gtab'):el;
+  inlineEditing=true;
+  if(kind==='goal'){host.innerHTML='';host.appendChild(inp);}else{host.replaceWith(inp);}
+  let finished=false;
+  const finish=save=>{if(finished)return;finished=true;inlineEditing=false;const v=inp.value.trim();if(save&&v&&v!==n.name){n.name=v;saveAll();}renderGoalTabs();renderGoalContent();};
+  inp.addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();finish(true);}else if(ev.key==='Escape'){ev.preventDefault();finish(false);}});
+  inp.addEventListener('blur',()=>finish(true));
+  inp.addEventListener('click',ev=>ev.stopPropagation());
+  inp.focus();inp.select();
+}
 function selectGoal(i){activeGoalIdx=i;renderGoalTabs();renderGoalContent();}
 function deleteGoal(i){if(!confirm('Delete this goal?'))return;goals.splice(i,1);if(activeGoalIdx>=goals.length)activeGoalIdx=Math.max(0,goals.length-1);saveAll();renderGoalTabs();renderGoalContent();}
-function renameGoal(i){const g=goals[i];if(!g)return;const name=prompt('Rename goal',g.name);if(!name||!name.trim())return;g.name=name.trim();saveAll();renderGoalTabs();renderGoalContent();}
 function setGoalSort(v){goalSort=v;saveAll();renderGoalTabs();}
 function setGoalTagFilter(v){goalTagFilter=v;saveAll();renderGoalTabs();renderGoalContent();}
 function toggleGoalTagManager(){const el=document.getElementById('goal-tag-manager');el?.classList.toggle('open');renderGoalTagControls();if(el?.classList.contains('open'))setTimeout(()=>document.getElementById('new-goal-tag')?.focus(),0);}
@@ -1141,7 +1170,6 @@ function saveNodeText(nid,field,val){const n=findNode(nid,goals);if(n){n[field]=
 function addStep(pid){const inp=document.getElementById('ai-'+pid);if(!inp)return;const name=inp.value.trim();if(!name)return;const par=findNode(pid,goals);if(par)par.children.push({id:uid(),name,done:false,collapsed:false,inFocus:false,startDate:'',deadline:'',children:[]});inp.value='';const el=document.getElementById('ail-'+pid);if(el)el.classList.remove('open');saveAll();renderGoalContent();}
 function addRootStep(gid){const inp=document.getElementById('root-inp-'+gid);if(!inp)return;const name=inp.value.trim();if(!name)return;const g=goals.find(x=>x.id===gid);if(g)g.children.push({id:uid(),name,done:false,collapsed:false,inFocus:false,startDate:'',deadline:'',children:[]});inp.value='';saveAll();renderGoalContent();}
 function removeNode(id){function del(arr){for(let i=0;i<arr.length;i++){if(arr[i].id===id){arr.splice(i,1);return true;}if(del(arr[i].children))return true;}}del(goals);if(activeStepId===id)activeStepId=null;saveAll();renderGoalContent();}
-function renameNode(id){const n=findNode(id,goals);if(!n)return;const name=prompt('Rename',n.name);if(!name||!name.trim())return;n.name=name.trim();saveAll();renderGoalContent();}
 function toggleDone(id){const n=findNode(id,goals);if(!n)return;n.done=!n.done;if(n.done){const sc=countChildSp(n)+(timers[id]?timers[id].done:0);history.push({type:'goal',name:n.name,date:TODAY,id,sprintCount:sc});awardXP(100,'GOAL COMPLETE');}else{const idx=[...history].reverse().findIndex(h=>h.type==='goal'&&h.id===id);if(idx>=0)history.splice(history.length-1-idx,1);}saveAll();renderGoalContent();}
 function toggleCollapse(id){const n=findNode(id,goals);if(n)n.collapsed=!n.collapsed;saveAll();renderGoalContent();}
 function toggleFocus(id){const n=findNode(id,goals);if(n)n.inFocus=!n.inFocus;saveAll();renderGoalContent();}
@@ -1214,14 +1242,13 @@ function renderPNode(node,depth){
     <div class="p-row${sel?' sel':''}">
     <button class="drag-handle" aria-label="Drag ${esc(node.name)}" title="Drag to reorder · arrow keys also work" onmousedown="beginMouseNodeDrag(event,'${node.id}')" ontouchstart="beginTouchNodeDrag(event,'${node.id}')" onkeydown="keyboardMoveNode(event,'${node.id}')">↕</button>
     <div class="p-dot${node.done?' done':''}${sel?' act':''}" onclick="toggleDone('${node.id}')"></div>
-    <span class="p-name${node.done?' done':''}" onclick="selectStep('${node.id}')" style="font-size:${fs};font-weight:${fw}">${esc(node.name)}</span>
+    <span class="p-name${node.done?' done':''}" title="Double-click to rename" onclick="tapItem('step','${node.id}',event,()=>selectStep('${node.id}'))" style="font-size:${fs};font-weight:${fw}">${esc(node.name)}</span>
     ${deadlineBadge}
     ${totalSp>0?`<span class="p-sp-badge">${totalSp}SP</span>`:''}
     <div class="p-acts">
       <button class="date-toggle${dOpen?' open':''}${hasAnyDate?' has':''}" onclick="toggleNodeDates('${node.id}')" title="Toggle timeline" aria-label="Toggle timeline for ${esc(node.name)}"><i class="timeline-icon">◷</i></button>
       ${hasC?`<button class="btn btn-ghost btn-xs" onclick="toggleCollapse('${node.id}')" style="font-size:11px">${node.collapsed?'▸':'▾'}</button>`:''}
       <button class="btn btn-ghost btn-xs" onclick="toggleFocus('${node.id}')" style="color:${node.inFocus?'var(--accent)':'var(--text3)'}">DF</button>
-      <button class="btn btn-ghost btn-xs" onclick="renameNode('${node.id}')" aria-label="Rename ${esc(node.name)}" title="Rename">✎</button>
       <button class="btn btn-ghost btn-xs" onclick="showInline('${node.id}')">+</button>
       <button class="btn btn-danger btn-xs" onclick="removeNode('${node.id}')">×</button>
     </div></div>
@@ -1281,15 +1308,9 @@ function renderSprintPanel(){
     </div>
   </div>
     <div style="font-size:17px;font-weight:700;margin-bottom:12px;color:var(--text);letter-spacing:.02em">${esc(node.name)}</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-      <div style="background:var(--bg1);border:1px solid var(--border);border-left:3px solid var(--peach);border-radius:var(--radius-sm);padding:10px 12px">
-        <div style="font-size:10px;font-weight:700;color:var(--peach);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px">Blockers</div>
-        <textarea class="inp" rows="2" placeholder="What's in the way?" style="font-size:12px;padding:6px 8px" oninput="saveNodeText('${node.id}','blockers',this.value)">${esc(node.blockers||'')}</textarea>
-      </div>
-      <div style="background:var(--bg1);border:1px solid var(--border);border-left:3px solid #9b7fff;border-radius:var(--radius-sm);padding:10px 12px">
-        <div style="font-size:10px;font-weight:700;color:#9b7fff;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px">Resources</div>
-        <textarea class="inp" rows="2" placeholder="What can help?" style="font-size:12px;padding:6px 8px" oninput="saveNodeText('${node.id}','resources',this.value)">${esc(node.resources||'')}</textarea>
-      </div>
+    <div style="background:var(--bg1);border:1px solid var(--border);border-left:3px solid var(--peach);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:12px">
+      <div style="font-size:10px;font-weight:700;color:var(--peach);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px">Blockers</div>
+      <textarea class="inp" rows="2" placeholder="What's in the way?" style="font-size:12px;padding:6px 8px" oninput="saveNodeText('${node.id}','blockers',this.value)">${esc(node.blockers||'')}</textarea>
     </div>
     ${obstacle}
     <div class="dur-row">${[5,10,15,25].map(d=>`<button class="dur-btn${!swMode&&sprintDur===d?' on':''}" onclick="setDur(${d})">${d}M</button>`).join('')}
@@ -1309,6 +1330,7 @@ function countDone(arr){let t=0;arr.forEach(n=>{if(n.done)t++;t+=countDone(n.chi
 function goalProgress(g){const total=countNodes(g.children);if(!total)return 0;return Math.round(countDone(g.children)/total*100);}
 function goalProgressColor(pct){if(pct>=100)return'#5aaf78';if(pct>=60)return'#6b9e7a';if(pct>=30)return'#f5a623';return'#e05555';}
 function renderGoalTabs(){
+  if(inlineEditing)return;
   const el=document.getElementById('goal-tabs');if(!el)return;
   let visible=goals.map((g,i)=>({g,i})).filter(x=>goalTagFilter==='all'||(x.g.tagIds||[]).includes(goalTagFilter));
   if(goalSort==='name')visible.sort((a,b)=>a.g.name.localeCompare(b.g.name));
@@ -1320,17 +1342,17 @@ function renderGoalTabs(){
     const pct=goalProgress(g);const isOn=i===activeGoalIdx;
     const fillColor=isOn?'rgba(255,255,255,0.85)':goalProgressColor(pct);
     return`<div class="gtab${isOn?' on':''}">
-      <button style="all:unset;display:flex;flex-direction:column;align-items:center;gap:5px;width:100%;cursor:pointer" onclick="selectGoal(${i})">
+      <button style="all:unset;display:flex;flex-direction:column;align-items:center;gap:5px;width:100%;cursor:pointer" onclick="tapItem('goal','${g.id}',event,()=>selectGoal(${i}))" title="Double-click to rename">
         <span>${esc(g.name)}</span>
         <div class="gtab-bar"><div class="gtab-fill" style="width:${pct}%;background:${fillColor}"></div></div>
       </button>
-      <button class="gtab-rename" onclick="event.stopPropagation();renameGoal(${i})" aria-label="Rename ${esc(g.name)}" title="Rename">✎</button>
       <button class="gtab-delete" onclick="event.stopPropagation();deleteGoal(${i})" aria-label="Delete ${esc(g.name)}">×</button>
     </div>`;
   }).join('')||'<div class="goal-tag-empty" style="padding:8px 0">No goals match this tag.</div>';
 }
 
 function renderGoalContent(){
+  if(inlineEditing)return;
   const el=document.getElementById('goal-content');if(!el)return;
   if(!goals.length){el.innerHTML=`<div class="empty-state">No goals yet<br>Add one above</div>`;return;}
   if(goalTagFilter!=='all'&&!goals.some(g=>(g.tagIds||[]).includes(goalTagFilter))){el.innerHTML=`<div class="empty-state">No goals match this tag.<br>Choose another tag or assign it to a goal.</div>`;return;}
@@ -1606,43 +1628,110 @@ function jumpGoalCalToday(){
   if(nextBtn)nextBtn.style.opacity='0.3';if(todayBtn)todayBtn.style.display='none';
   renderGoalCal();
 }
+const GCAL_COLORS=['#6b9e7a','#e0805a','#9b7fff','#4a90c2','#d4a02c','#c2567a'];
+let gcalSelDate=null;
+function selectGoalCalDate(k){gcalSelDate=k;renderGoalCal();}
+function gcalDaysBetween(a,b){return Math.round((parseDt(b)-parseDt(a))/86400000);}
+function gcalNodePct(n){if(n.done)return 100;if(n.children&&n.children.length)return Math.round(countDone(n.children)/countNodes(n.children)*100);return 0;}
+function gcalStatus(pct,end){
+  if(pct>=100)return{txt:'Complete',col:'var(--accent-d)'};
+  if(!end)return{txt:'No deadline',col:'var(--text3)'};
+  const d=gcalDaysBetween(TODAY,end);
+  if(d<0)return{txt:'Overdue '+(-d)+'d',col:'#e05555'};
+  return{txt:d===0?'Due today':d+'d left',col:d<=3?'#d4820c':'var(--text3)'};
+}
 function renderGoalCal(){
   const year=goalCalViewYear,month=goalCalViewMonth;
   const lbl=document.getElementById('gcal-lbl');if(!lbl)return;
+  if(!gcalSelDate)gcalSelDate=TODAY;
   lbl.textContent=new Date(year,month,1).toLocaleDateString('en',{month:'long',year:'numeric'}).toUpperCase();
+  const mk=d=>`${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  const firstDay=new Date(year,month,1).getDay();const daysInMonth=new Date(year,month+1,0).getDate();
+  const monthStart=mk(1),monthEnd=mk(daysInMonth);
   const spByDay={},goByDay={};
   history.forEach(h=>{if(h.type==='sprint')spByDay[h.date]=(spByDay[h.date]||0)+1;if(h.type==='goal')goByDay[h.date]=(goByDay[h.date]||0)+1;});
-  const firstDay=new Date(year,month,1).getDay();const daysInMonth=new Date(year,month+1,0).getDate();
+  const goalRows=goals.map(g=>collectRows(g));
+  const goalOf=id=>{const gi=goals.findIndex(g=>g.id===id||findNode(id,[g]));return gi;};
+  const dueByDay={};
+  goalRows.forEach((rows,gi)=>rows.forEach(r=>{if(r.end){(dueByDay[r.end]=dueByDay[r.end]||[]).push({r,gi});}}));
+  const activeOn=k=>goals.map((g,gi)=>({g,gi})).filter(({g})=>{const s=g.startDate,e=g.deadline;if(s&&e)return s<=k&&k<=e;if(e)return k===e;if(s)return k===s;return false;});
+
   let html=`<tr>${['Su','Mo','Tu','We','Th','Fr','Sa'].map(d=>`<td class="cal-wd">${d}</td>`).join('')}</tr><tr>`;
-  let col=0;
-  let monthXP=0,monthGoals=0,monthSprints=0;
+  let col=0,monthXP=0,monthGoals=0,monthSprints=0,dueTotal=0,dueDone=0,dueOver=0;
   for(let i=0;i<firstDay;i++){html+=`<td class="cal-cell empty"></td>`;col++;}
   for(let day=1;day<=daysInMonth;day++){
-    const k=`${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-    const sp=spByDay[k]||0,go=goByDay[k]||0;
-    const xp=sp*10+go*100;
+    const k=mk(day);
+    const sp=spByDay[k]||0,go=goByDay[k]||0,xp=sp*10+go*100;
     monthXP+=xp;monthGoals+=go;monthSprints+=sp;
+    const due=dueByDay[k]||[];
+    due.forEach(({r})=>{dueTotal++;if(r.done)dueDone++;else if(k<TODAY)dueOver++;});
     let cls=sp&&go?'both':sp?'has-sp':go?'has-go':'';
-    html+=`<td class="cal-cell${cls?' '+cls:''}${k===TODAY?' today':''}" style="cursor:pointer" onclick="jumpToGoalCalDate('${k}')" title="${k}${go?' · '+go+' goal complete':''}${sp?' · '+sp+' sprint':''}"><div class="cal-day">${day}</div>${xp?`<div class="cal-cnt">+${xp}</div>`:''}</td>`;
+    const dots=activeOn(k).slice(0,4).map(({gi})=>`<i style="background:${GCAL_COLORS[gi%GCAL_COLORS.length]}"></i>`).join('');
+    let flag='';
+    if(due.length){const allDone=due.every(x=>x.r.done);const over=!allDone&&k<TODAY;flag=`<span style="color:${allDone?'var(--accent-d)':over?'#e05555':'#d4820c'};font-size:9px">${allDone?'✓':'⚑'}</span>`;}
+    const cnt=(flag||xp)?`<div class="cal-cnt">${flag}${xp?(flag?' ':'')+'+'+xp:''}</div>`:'';
+    html+=`<td class="cal-cell${cls?' '+cls:''}${k===TODAY?' today':''}${k===gcalSelDate?' sel':''}" style="cursor:pointer" onclick="selectGoalCalDate('${k}')" title="${k}"><div class="cal-day">${day}</div><div class="cal-dots">${dots}</div>${cnt}</td>`;
     col++;if(col%7===0&&day<daysInMonth)html+=`</tr><tr>`;
   }
   while(col%7!==0){html+=`<td class="cal-cell empty"></td>`;col++;}
   document.getElementById('gcal-table').innerHTML=html;
+
+  // Selected day detail
+  const sel=gcalSelDate;
+  const dl=document.getElementById('gcal-day-lbl');
+  if(dl)dl.textContent=(sel===TODAY?'Today · ':'')+parseDt(sel).toLocaleDateString('en',{weekday:'short',month:'short',day:'numeric'}).toUpperCase();
+  const selSp=history.filter(h=>h.type==='sprint'&&h.date===sel).length;
+  const selDone=history.filter(h=>h.type==='goal'&&h.date===sel);
+  const selDue=dueByDay[sel]||[];
+  const selActive=activeOn(sel);
+  const chip=(gi)=>`<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${GCAL_COLORS[gi%GCAL_COLORS.length]};margin-right:7px;flex-shrink:0"></span>`;
+  const sect=(t,body)=>body?`<div style="margin-top:12px"><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">${t}</div>${body}</div>`:'';
+  const item=(inner,extra)=>`<div style="display:flex;align-items:center;font-size:13px;color:var(--text2);padding:5px 0;border-bottom:1px solid var(--border)">${inner}${extra||''}</div>`;
+  let dh=`<div style="display:flex;gap:14px;font-size:12px;color:var(--text3)"><span><b style="color:var(--text)">+${selSp*10+selDone.length*100}</b> XP</span><span><b style="color:var(--text)">${selDone.length}</b> completed</span><span><b style="color:var(--text)">${selSp}</b> sprint${selSp!==1?'s':''}</span></div>`;
+  dh+=sect('Completed',selDone.map(h=>{const gi=goalOf(h.id);return item((gi>=0?chip(gi):'')+`<span style="flex:1">${esc(h.name)}</span>`,`<span style="color:var(--accent-d);font-size:12px;font-weight:600">✓ +100</span>`);}).join(''));
+  dh+=sect('Deadlines',selDue.map(({r,gi})=>{const st=r.done?{txt:'Done',col:'var(--accent-d)'}:sel<TODAY?{txt:'Missed',col:'#e05555'}:{txt:sel===TODAY?'Due today':gcalDaysBetween(TODAY,sel)+'d left',col:'#d4820c'};return item(chip(gi)+`<span style="flex:1${r.done?';text-decoration:line-through;color:var(--text3)':''}">${esc(r.name)}${r.depth>0?`<span style="color:var(--text3);font-size:11px"> · ${esc(goals[gi].name)}</span>`:''}</span>`,`<span style="color:${st.col};font-size:12px;font-weight:600">${st.txt}</span>`);}).join(''));
+  dh+=sect('Active timelines',selActive.map(({g,gi})=>{const p=goalProgress(g);return item(chip(gi)+`<span style="flex:1">${esc(g.name)}</span>`,`<span style="color:var(--text3);font-size:12px">${p}%</span>`);}).join(''));
+  if(!selDone.length&&!selDue.length&&!selActive.length&&!selSp)dh+=`<div style="font-size:12px;color:var(--text3);margin-top:10px">Nothing scheduled or logged.</div>`;
+  dh+=`<button class="btn btn-ghost btn-xs" style="margin-top:12px" onclick="jumpToGoalCalDate('${sel}')">Open in Log →</button>`;
+  const dayEl=document.getElementById('gcal-day');if(dayEl)dayEl.innerHTML=dh;
+
+  // Goal timelines for the viewed month
+  const tl=document.getElementById('gcal-timeline');
+  if(tl){
+    const pos=d=>Math.max(0,Math.min(1,(gcalDaysBetween(monthStart,d))/daysInMonth));
+    const bar=(r,color,pct)=>{
+      const s=r.start&&r.start<=monthEnd?r.start:null,e=r.end&&r.end>=monthStart?r.end:null;
+      if(r.start&&r.end){
+        if(r.end<monthStart||r.start>monthEnd)return null;
+        const l=pos(r.start<monthStart?monthStart:r.start)*100;
+        const rr=Math.min(1,(gcalDaysBetween(monthStart,r.end>monthEnd?monthEnd:r.end)+1)/daysInMonth)*100;
+        return`<div style="position:absolute;left:${l}%;width:${Math.max(rr-l,2)}%;top:0;bottom:0;background:${color}33;border:1px solid ${color}88;border-radius:4px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${color}"></div></div>`;
+      }
+      const d=r.end||r.start;if(d<monthStart||d>monthEnd)return null;
+      return`<div style="position:absolute;left:calc(${(gcalDaysBetween(monthStart,d)+.5)/daysInMonth*100}% - 5px);top:50%;width:10px;height:10px;transform:translateY(-50%) rotate(45deg);background:${pct>=100?color:'var(--bg1)'};border:2px solid ${color}"></div>`;
+    };
+    const todayPct=(TODAY>=monthStart&&TODAY<=monthEnd)?(gcalDaysBetween(monthStart,TODAY)+.5)/daysInMonth*100:null;
+    const track=inner=>`<div style="position:relative;height:14px;background:var(--bg2);border-radius:4px">${inner}${todayPct!==null?`<div style="position:absolute;left:${todayPct}%;top:-2px;bottom:-2px;width:2px;background:var(--accent);opacity:.6"></div>`:''}</div>`;
+    let th='',undated='';
+    goals.forEach((g,gi)=>{
+      const color=GCAL_COLORS[gi%GCAL_COLORS.length];const rows=goalRows[gi];const gp=goalProgress(g);
+      const st=gcalStatus(gp,g.deadline);
+      const head=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><span style="width:9px;height:9px;border-radius:50%;background:${color};flex-shrink:0"></span><span style="flex:1;font-size:13px;font-weight:700;color:var(--text);min-width:0;overflow-wrap:anywhere">${esc(g.name)}</span><span style="font-size:11px;font-weight:600;color:${st.col};white-space:nowrap">${st.txt}</span><span style="font-size:11px;color:var(--text3);font-family:var(--mono)">${gp}%</span></div>`;
+      if(!rows.length){undated+=`<div style="margin-bottom:10px">${head}<div style="height:5px;background:var(--bg2);border-radius:3px;overflow:hidden"><div style="height:100%;width:${gp}%;background:${color}"></div></div></div>`;return;}
+      const visible=rows.map(r=>{const node=findNode(r.id,goals);const p=r.depth===0?gp:gcalNodePct(node||{});return{r,p,b:bar(r,color,p)};}).filter(x=>x.b);
+      if(!visible.length)return;
+      th+=`<div style="margin-bottom:14px">${head}${visible.map(({r,p,b})=>`<div style="display:flex;align-items:center;gap:8px;margin-top:4px;padding-left:${r.depth>0?Math.min(r.depth,3)*10:0}px"><div style="width:${r.depth===0?0:84}px;flex-shrink:0;font-size:10px;color:${r.done?'var(--text3)':'var(--text2)'};${r.done?'text-decoration:line-through;':''}overflow:hidden;text-overflow:ellipsis;white-space:nowrap;${r.depth===0?'display:none':''}" title="${esc(r.name)}">${esc(r.name)}</div><div style="flex:1;min-width:0">${track(b)}</div></div>`).join('')}</div>`;
+    });
+    const scale=`<div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text3);font-family:var(--mono);margin-bottom:8px"><span>1</span><span>${Math.round(daysInMonth/2)}</span><span>${daysInMonth}</span></div>`;
+    tl.innerHTML=(goals.length?scale+th+(undated?`<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin:6px 0 8px">No timeline set</div>${undated}`:''):`<div class="empty-state" style="padding:14px 0">No goals yet</div>`)||'';
+    if(goals.length&&!th&&!undated)tl.innerHTML=scale+`<div style="font-size:12px;color:var(--text3)">No goal timelines fall in this month.</div>`;
+  }
+
   const sumEl=document.getElementById('gcal-summary');
-  if(sumEl)sumEl.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-    <div style="background:var(--bg1);border-radius:var(--radius-sm);padding:10px 12px;text-align:center">
-      <div style="font-size:22px;font-weight:700;color:var(--text)">${monthXP}</div>
-      <div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">XP this month</div>
-    </div>
-    <div style="background:var(--bg1);border-radius:var(--radius-sm);padding:10px 12px;text-align:center">
-      <div style="font-size:22px;font-weight:700;color:var(--text)">${monthGoals}</div>
-      <div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Goals done</div>
-    </div>
-    <div style="background:var(--bg1);border-radius:var(--radius-sm);padding:10px 12px;text-align:center">
-      <div style="font-size:22px;font-weight:700;color:var(--text)">${monthSprints}</div>
-      <div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Sprints</div>
-    </div>
-  </div>`;
+  if(sumEl){
+    const stat=(v,l,c)=>`<div style="background:var(--bg1);border-radius:var(--radius-sm);padding:10px 8px;text-align:center"><div style="font-size:20px;font-weight:700;color:${c||'var(--text)'}">${v}</div><div style="font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">${l}</div></div>`;
+    sumEl.innerHTML=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">${stat(monthXP,'XP')}${stat(monthGoals,'Completed')}${stat(dueTotal-dueDone,'Deadlines open')}${stat(dueOver,'Overdue',dueOver?'#e05555':'')}</div><div style="font-size:11px;color:var(--text3);margin-top:8px">${monthSprints} sprint${monthSprints!==1?'s':''} · ${dueDone}/${dueTotal} deadlines met</div>`;
+  }
 }
 
 // ── HISTORY ──────────────────────────────────────
