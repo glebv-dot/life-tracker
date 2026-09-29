@@ -1048,6 +1048,9 @@ function fwRenderList(){
 function findNode(id,arr){for(const n of arr){if(n.id===id)return n;const f=findNode(id,n.children);if(f)return f;}return null;}
 function countChildSp(node){let t=0;node.children.forEach(c=>{const tm=timers[c.id];if(tm)t+=tm.done;t+=countChildSp(c);});return t;}
 function getFocusNodes(arr,out=[]){arr.forEach(n=>{if(n.inFocus&&!n.done)out.push(n);getFocusNodes(n.children,out);});return out;}
+function getAllFocusNodes(){const out=[];goals.forEach((g,gi)=>getFocusNodes(g.children).forEach(n=>out.push({n,gi})));return out;}
+function findNodeGoalIdx(id){for(let i=0;i<goals.length;i++){if(findNode(id,goals[i].children))return i;}return-1;}
+function selectFocusItem(id){const gi=findNodeGoalIdx(id);if(gi>=0&&gi!==activeGoalIdx){activeGoalIdx=gi;renderGoalTabs();}selectStep(id);}
 
 let aiGoalDraft=null,aiGoalContext=null;
 function openGoalBreakdown(){
@@ -1358,7 +1361,7 @@ function renderGoalContent(){
   if(goalTagFilter!=='all'&&!goals.some(g=>(g.tagIds||[]).includes(goalTagFilter))){el.innerHTML=`<div class="empty-state">No goals match this tag.<br>Choose another tag or assign it to a goal.</div>`;return;}
   if(activeGoalIdx>=goals.length)activeGoalIdx=0;
   const g=goals[activeGoalIdx];if(!g){el.innerHTML='';return;}
-  const focusNodes=getFocusNodes(g.children);
+  const focusNodes=getAllFocusNodes();
 
   // Gantt chart (only if any dates set)
   let h=renderGantt(g);
@@ -1389,10 +1392,10 @@ function renderGoalContent(){
     </div>`;
   }
 
-  h+=`<div class="focus-card"><div class="card-label" style="margin-bottom:8px;color:var(--accent)">Daily Focus <span style="font-weight:400;color:var(--text3)">— TAP DF ON ANY STEP</span></div>`;
-  if(focusNodes.length){focusNodes.forEach(n=>{const isSel=activeStepId===n.id;const sp=timers[n.id]?timers[n.id].done:0;h+=`<div class="focus-item${isSel?' act':''}" onclick="selectStep('${n.id}')">
+  h+=`<div class="focus-card"><div class="card-label" style="margin-bottom:8px;color:var(--accent)">Daily Focus <span style="font-weight:400;color:var(--text3)">— ACROSS ALL GOALS · TAP DF ON ANY STEP</span></div>`;
+  if(focusNodes.length){focusNodes.forEach(({n,gi})=>{const isSel=activeStepId===n.id;const sp=timers[n.id]?timers[n.id].done:0;const otherGoal=gi!==activeGoalIdx?goals[gi]:null;h+=`<div class="focus-item${isSel?' act':''}" onclick="selectFocusItem('${n.id}')">
     <div style="width:6px;height:6px;border-radius:1px;background:${isSel?'var(--accent)':'var(--text4)'};flex-shrink:0"></div>
-    <span style="flex:1;font-size:15px;color:${isSel?'var(--accent-d)':'var(--text2)'};font-weight:${isSel?'600':'400'}">${esc(n.name)}</span>
+    <span style="flex:1;min-width:0;font-size:15px;color:${isSel?'var(--accent-d)':'var(--text2)'};font-weight:${isSel?'600':'400'}">${esc(n.name)}${otherGoal?`<span style="display:block;font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-top:1px">${esc(otherGoal.name)}</span>`:''}</span>
     ${sp>0?`<span style="font-size:10px;color:var(--accent-d);font-weight:600">${sp} sp</span>`:''}
     <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();toggleFocus('${n.id}')">✕</button>
   </div>`;});}else{h+=`<div style="font-size:12px;color:var(--text3);padding:6px 0;font-family:var(--mono);text-transform:uppercase;letter-spacing:.1em">No items — tap DF on any step</div>`;}
