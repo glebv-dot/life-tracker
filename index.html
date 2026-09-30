@@ -341,7 +341,7 @@ textarea.inp{resize:none;line-height:1.6}
 <div class="xp-toast" id="xp-toast"></div>
 
 <!-- FW TAB -->
-<div class="tab active" id="tab-fw">
+<div class="tab" id="tab-fw">
   <div class="page-header">
     <div class="hud-scan"></div>
     <div class="page-title">Goal Framework</div>
@@ -360,7 +360,7 @@ textarea.inp{resize:none;line-height:1.6}
 </div>
 
 <!-- GOALS TAB -->
-<div class="tab" id="tab-goals">
+<div class="tab active" id="tab-goals">
   <div class="page-header">
     <div class="hud-scan"></div>
     <div class="page-title">Goals</div>
@@ -588,10 +588,10 @@ textarea.inp{resize:none;line-height:1.6}
 
 <!-- NAV -->
 <nav class="nav">
-  <button class="nav-btn active" id="nav-fw" onclick="switchTab('fw')">
+  <button class="nav-btn" id="nav-fw" onclick="switchTab('fw')">
     <svg viewBox="0 0 20 20" fill="none"><path d="M3 5h14M3 9h9M3 13h11" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/></svg>FW
   </button>
-  <button class="nav-btn" id="nav-goals" onclick="switchTab('goals')">
+  <button class="nav-btn active" id="nav-goals" onclick="switchTab('goals')">
     <svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5"/><circle cx="10" cy="10" r="3" stroke="currentColor" stroke-width="1.5"/><line x1="10" y1="2" x2="10" y2="4.5" stroke="currentColor" stroke-width="1.5"/></svg>Goals
   </button>
   <button class="nav-btn" id="nav-calendar" onclick="switchTab('calendar')">
@@ -1955,7 +1955,7 @@ function wheelRenderPins(){
 }
 
 fwRenderList();
-renderXPBar();
+switchTab('goals');
 
 
 // == WHEEL CUSTOM TABLE ==
