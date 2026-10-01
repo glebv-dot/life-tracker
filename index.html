@@ -123,8 +123,8 @@ textarea.inp{resize:none;line-height:1.6}
 .gtab.on .gtab-bar{background:rgba(255,255,255,0.25)}
 .gtab-fill{height:100%;border-radius:2px;transition:width .4s cubic-bezier(.4,0,.2,1)}
 .gtab-delete{position:absolute;top:-10px;right:-7px;width:22px;height:22px;border-radius:50%;background:var(--peach);border:2px solid var(--bg2);color:white;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;z-index:2;box-shadow:0 2px 5px var(--shadow)}
-.inline-edit{flex:1;font:inherit;color:var(--text);background:var(--bg1);border:1.5px solid var(--accent);border-radius:var(--radius-sm);padding:3px 8px;outline:none;min-width:0;width:100%}
-.gtab .inline-edit{width:auto;min-width:110px;text-align:center;border-radius:var(--radius-pill)}
+.inline-edit{flex:1;font:inherit;color:var(--text);background:var(--bg1);border:1.5px solid var(--accent);border-radius:var(--radius-sm);padding:3px 8px;outline:none;min-width:0;width:100%;resize:none;overflow:hidden;white-space:pre-wrap;overflow-wrap:break-word;line-height:1.3}
+.gtab .inline-edit{width:auto;min-width:110px;max-width:240px;text-align:center;border-radius:var(--radius-sm)}
 .goal-tag-panel{margin:8px 0 0;padding:8px 10px;background:var(--bg1);border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:0 1px 6px var(--shadow)}
 .goal-tag-panel-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .goal-tag-panel-title{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em}
@@ -180,6 +180,8 @@ textarea.inp{resize:none;line-height:1.6}
 .p-node.drag-before::before,.p-node.drag-after::after{content:'';position:absolute;left:8px;right:8px;height:3px;border-radius:3px;background:var(--accent);z-index:4;pointer-events:none}
 .p-node.drag-before::before{top:-2px}.p-node.drag-after::after{bottom:-2px}
 .p-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius-sm);cursor:pointer;transition:background .1s}
+.p-row.editing{flex-wrap:wrap}
+.inline-edit-full{flex:1 1 100%}
 .p-row:hover{background:var(--bg2)}
 .p-row.sel{background:var(--accent-dim);outline:1.5px solid var(--accent-mid)}
 .p-dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--border2);background:var(--bg2);flex-shrink:0;transition:all .15s;position:relative}
@@ -1119,17 +1121,21 @@ function tapItem(kind,id,e,single){
 }
 function startInlineEdit(kind,id,el){
   const n=kind==='goal'?goals.find(g=>g.id===id):findNode(id,goals);if(!n||inlineEditing)return;
-  const inp=document.createElement('input');inp.type='text';inp.className='inline-edit';inp.value=n.name;inp.maxLength=200;
+  const inp=document.createElement('div');inp.className='inline-edit';inp.contentEditable='true';inp.textContent=n.name;
   const cs=getComputedStyle(el.querySelector('span')||el);inp.style.fontSize=cs.fontSize;inp.style.fontWeight=cs.fontWeight;
   const host=kind==='goal'?el.closest('.gtab'):el;
+  const row=kind==='goal'?null:host.closest('.p-row');
   inlineEditing=true;
+  if(row){row.classList.add('editing');inp.classList.add('inline-edit-full');}
   if(kind==='goal'){host.innerHTML='';host.appendChild(inp);}else{host.replaceWith(inp);}
   let finished=false;
-  const finish=save=>{if(finished)return;finished=true;inlineEditing=false;const v=inp.value.trim();if(save&&v&&v!==n.name){n.name=v;saveAll();}renderGoalTabs();renderGoalContent();};
+  const finish=save=>{if(finished)return;finished=true;inlineEditing=false;const v=inp.textContent.trim();if(save&&v&&v!==n.name){n.name=v.slice(0,200);saveAll();}renderGoalTabs();renderGoalContent();};
+  inp.addEventListener('paste',ev=>{ev.preventDefault();document.execCommand('insertText',false,(ev.clipboardData||window.clipboardData).getData('text/plain'));});
   inp.addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();finish(true);}else if(ev.key==='Escape'){ev.preventDefault();finish(false);}});
   inp.addEventListener('blur',()=>finish(true));
   inp.addEventListener('click',ev=>ev.stopPropagation());
-  inp.focus();inp.select();
+  inp.focus();
+  document.execCommand('selectAll',false,null);
 }
 function selectGoal(i){activeGoalIdx=i;renderGoalTabs();renderGoalContent();}
 function deleteGoal(i){if(!confirm('Delete this goal?'))return;goals.splice(i,1);if(activeGoalIdx>=goals.length)activeGoalIdx=Math.max(0,goals.length-1);saveAll();renderGoalTabs();renderGoalContent();}
