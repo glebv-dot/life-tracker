@@ -35,13 +35,13 @@
 html{background:var(--bg)}
 body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:15px;min-height:100dvh;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
 #bg-canvas{display:none}
-.app{max-width:480px;margin:0 auto;min-height:100dvh;position:relative}
+.app{max-width:760px;margin:0 auto;min-height:100dvh;position:relative}
 .tab{display:none;padding-bottom:calc(var(--nav-h) + var(--safe-bottom) + 20px)}
 .tab.active{display:block}
 input,button,textarea,select{font-family:var(--font)}
 
 /* NAV */
-.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;height:calc(var(--nav-h) + var(--safe-bottom));background:rgba(250,248,243,0.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--border);display:flex;align-items:flex-start;padding-top:10px;z-index:100;box-shadow:0 -4px 20px var(--shadow)}
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:760px;height:calc(var(--nav-h) + var(--safe-bottom));background:rgba(250,248,243,0.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--border);display:flex;align-items:flex-start;padding-top:10px;z-index:100;box-shadow:0 -4px 20px var(--shadow)}
 .nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:none;cursor:pointer;color:var(--text3);font-size:9px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:4px 0;transition:color .2s}
 .nav-btn svg{width:22px;height:22px;transition:transform .2s}
 .nav-btn.active{color:var(--accent)}
@@ -123,7 +123,7 @@ textarea.inp{resize:none;line-height:1.6}
 .gtab.on .gtab-bar{background:rgba(255,255,255,0.25)}
 .gtab-fill{height:100%;border-radius:2px;transition:width .4s cubic-bezier(.4,0,.2,1)}
 .gtab-delete{position:absolute;top:-10px;right:-7px;width:22px;height:22px;border-radius:50%;background:var(--peach);border:2px solid var(--bg2);color:white;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;z-index:2;box-shadow:0 2px 5px var(--shadow)}
-.inline-edit{flex:1;font:inherit;color:var(--text);background:var(--bg1);border:1.5px solid var(--accent);border-radius:var(--radius-sm);padding:3px 8px;outline:none;min-width:0;width:100%;resize:none;overflow:hidden;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.3}
+.inline-edit{flex:1;font:inherit;color:var(--text);background:var(--bg1);border:1.5px solid var(--accent);border-radius:var(--radius-sm);padding:3px 8px;outline:none;min-width:0;width:100%;resize:none;overflow:hidden;white-space:pre-wrap;overflow-wrap:break-word;line-height:1.3}
 .gtab .inline-edit{width:auto;min-width:110px;max-width:240px;text-align:center;border-radius:var(--radius-sm)}
 .goal-tag-panel{margin:8px 0 0;padding:8px 10px;background:var(--bg1);border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:0 1px 6px var(--shadow)}
 .goal-tag-panel-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
@@ -179,7 +179,7 @@ textarea.inp{resize:none;line-height:1.6}
 .p-node.dragging{opacity:.45}
 .p-node.drag-before::before,.p-node.drag-after::after{content:'';position:absolute;left:8px;right:8px;height:3px;border-radius:3px;background:var(--accent);z-index:4;pointer-events:none}
 .p-node.drag-before::before{top:-2px}.p-node.drag-after::after{bottom:-2px}
-.p-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius-sm);cursor:pointer;transition:background .1s}
+.p-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:9px 12px;border-radius:var(--radius-sm);cursor:pointer;transition:background .1s}
 .p-row.editing{flex-wrap:wrap}
 .inline-edit-full{flex:1 1 100%}
 .p-row:hover{background:var(--bg2)}
@@ -188,9 +188,9 @@ textarea.inp{resize:none;line-height:1.6}
 .p-dot.done{background:var(--accent);border-color:var(--accent)}
 .p-dot.done::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:white;font-weight:700}
 .p-dot.act{border-color:var(--accent);background:var(--accent-dim)}
-.p-name{flex:1;min-width:0;overflow-wrap:anywhere;font-size:15px;font-weight:500;color:var(--text);line-height:1.3}
+.p-name{flex:1 1 160px;min-width:min(130px,100%);overflow-wrap:break-word;font-size:15px;font-weight:500;color:var(--text);line-height:1.3}
 .p-name.done{color:var(--text3);text-decoration:line-through}
-.p-acts{display:flex;gap:4px;align-items:center;flex-shrink:0}
+.p-acts{display:flex;gap:4px;align-items:center;flex-shrink:0;margin-left:auto}
 .p-acts .btn-xs,.p-acts .date-toggle,.drag-handle{min-width:34px;min-height:34px;padding:6px 9px;display:inline-flex;align-items:center;justify-content:center}
 .p-acts .btn-xs{font-size:14px}
 .drag-handle{border:0;background:transparent;color:var(--text3);border-radius:9px;font-size:17px;font-weight:700;line-height:1;cursor:grab;touch-action:none;flex-shrink:0}
@@ -215,9 +215,10 @@ textarea.inp{resize:none;line-height:1.6}
 .date-toggle.has{color:var(--accent)}
 
 @media(max-width:480px){
-  .p-row{flex-wrap:wrap;gap:7px;padding:10px 8px}
-  .p-name{min-width:120px}
+  .p-row{gap:7px;padding:10px 8px}
   .p-acts{width:100%;padding-left:38px;justify-content:flex-end}
+  .p-kids{padding-left:12px;margin-left:6px}
+  .p-name{flex-basis:110px;min-width:min(100px,100%)}
 }
 
 /* FOCUS / SPRINT */
@@ -1316,7 +1317,7 @@ function renderSprintPanel(){
       <span class="xp-mult ${multCls}" style="font-size:9px">${multLabel}</span>
     </div>
   </div>
-    <div style="font-size:17px;font-weight:700;margin-bottom:12px;color:var(--text);letter-spacing:.02em;overflow-wrap:anywhere">${esc(node.name)}</div>
+    <div style="font-size:17px;font-weight:700;margin-bottom:12px;color:var(--text);letter-spacing:.02em;overflow-wrap:break-word">${esc(node.name)}</div>
     <div style="background:var(--bg1);border:1px solid var(--border);border-left:3px solid var(--peach);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:12px">
       <div style="font-size:10px;font-weight:700;color:var(--peach);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px">Blockers</div>
       <textarea class="inp" rows="2" placeholder="What's in the way?" style="font-size:12px;padding:6px 8px" oninput="saveNodeText('${node.id}','blockers',this.value)">${esc(node.blockers||'')}</textarea>
@@ -1401,7 +1402,7 @@ function renderGoalContent(){
   h+=`<div class="focus-card"><div class="card-label" style="margin-bottom:8px;color:var(--accent)">Daily Focus <span style="font-weight:400;color:var(--text3)">— ACROSS ALL GOALS · TAP DF ON ANY STEP</span></div>`;
   if(focusNodes.length){focusNodes.forEach(({n,gi})=>{const isSel=activeStepId===n.id;const sp=timers[n.id]?timers[n.id].done:0;const otherGoal=gi!==activeGoalIdx?goals[gi]:null;h+=`<div class="focus-item${isSel?' act':''}" onclick="selectFocusItem('${n.id}')">
     <div style="width:6px;height:6px;border-radius:1px;background:${isSel?'var(--accent)':'var(--text4)'};flex-shrink:0"></div>
-    <span style="flex:1;min-width:0;overflow-wrap:anywhere;font-size:15px;color:${isSel?'var(--accent-d)':'var(--text2)'};font-weight:${isSel?'600':'400'}">${esc(n.name)}${otherGoal?`<span style="display:block;font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-top:1px">${esc(otherGoal.name)}</span>`:''}</span>
+    <span style="flex:1;min-width:0;overflow-wrap:break-word;font-size:15px;color:${isSel?'var(--accent-d)':'var(--text2)'};font-weight:${isSel?'600':'400'}">${esc(n.name)}${otherGoal?`<span style="display:block;font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-top:1px">${esc(otherGoal.name)}</span>`:''}</span>
     ${sp>0?`<span style="font-size:10px;color:var(--accent-d);font-weight:600">${sp} sp</span>`:''}
     <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();toggleFocus('${n.id}')">✕</button>
   </div>`;});}else{h+=`<div style="font-size:12px;color:var(--text3);padding:6px 0;font-family:var(--mono);text-transform:uppercase;letter-spacing:.1em">No items — tap DF on any step</div>`;}
@@ -1725,7 +1726,7 @@ function renderGoalCal(){
     goals.forEach((g,gi)=>{
       const color=GCAL_COLORS[gi%GCAL_COLORS.length];const rows=goalRows[gi];const gp=goalProgress(g);
       const st=gcalStatus(gp,g.deadline);
-      const head=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><span style="width:9px;height:9px;border-radius:50%;background:${color};flex-shrink:0"></span><span style="flex:1;font-size:13px;font-weight:700;color:var(--text);min-width:0;overflow-wrap:anywhere">${esc(g.name)}</span><span style="font-size:11px;font-weight:600;color:${st.col};white-space:nowrap">${st.txt}</span><span style="font-size:11px;color:var(--text3);font-family:var(--mono)">${gp}%</span></div>`;
+      const head=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><span style="width:9px;height:9px;border-radius:50%;background:${color};flex-shrink:0"></span><span style="flex:1;font-size:13px;font-weight:700;color:var(--text);min-width:min(110px,100%);overflow-wrap:break-word">${esc(g.name)}</span><span style="font-size:11px;font-weight:600;color:${st.col};white-space:nowrap">${st.txt}</span><span style="font-size:11px;color:var(--text3);font-family:var(--mono)">${gp}%</span></div>`;
       if(!rows.length){undated+=`<div style="margin-bottom:10px">${head}<div style="height:5px;background:var(--bg2);border-radius:3px;overflow:hidden"><div style="height:100%;width:${gp}%;background:${color}"></div></div></div>`;return;}
       const visible=rows.map(r=>{const node=findNode(r.id,goals);const p=r.depth===0?gp:gcalNodePct(node||{});return{r,p,b:bar(r,color,p)};}).filter(x=>x.b);
       if(!visible.length)return;
