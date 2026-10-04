@@ -139,6 +139,17 @@ textarea.inp{resize:none;line-height:1.6}
 .goal-tag.on .goal-tag-dot{background:white}
 .goal-tag-remove{all:unset;cursor:pointer;font-size:13px;line-height:1;opacity:.7;padding:0 1px}
 .goal-tag-empty{font-size:11px;color:var(--text3)}
+.tag-group{flex:1 1 100%;display:flex;flex-wrap:wrap;align-items:center;gap:5px}
+.tag-group-head{flex:1 1 100%;display:flex;align-items:center;gap:6px;margin-top:3px}
+.tag-group-label{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em}
+.tag-group-label.editable{cursor:text}
+.tag-group-del{all:unset;cursor:pointer;font-size:12px;line-height:1;color:var(--text3);padding:0 3px}
+.goal-tag-move{position:relative;display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;font-size:11px;opacity:.7;cursor:pointer}
+.goal-tag-move select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:16px}
+.gtab{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.gtab.dragging{opacity:.45}
+.gtab.drop-before::before,.gtab.drop-after::after{content:'';position:absolute;top:-4px;bottom:-4px;width:3px;border-radius:3px;background:var(--accent);z-index:3;pointer-events:none}
+.gtab.drop-before::before{left:-6px}.gtab.drop-after::after{right:-6px}
 .new-goal-row{display:flex;gap:8px;padding:12px 20px 0}
 .ai-goal-row{padding:10px 20px 0}
 .ai-modal{display:none;position:fixed;inset:0;z-index:600;background:rgba(44,44,44,.45);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);align-items:flex-end;justify-content:center}
@@ -379,7 +390,8 @@ textarea.inp{resize:none;line-height:1.6}
         </select>
       </div>
       <div class="goal-tag-manager" id="goal-tag-manager">
-        <div class="row"><input class="inp" id="new-goal-tag" placeholder="New tag name..." maxlength="24" onkeydown="if(event.key==='Enter')addGoalTag()"><button class="btn btn-purple btn-xs" onclick="addGoalTag()">Add</button></div>
+        <div class="row"><input class="inp" id="new-goal-tag" placeholder="New tag name..." maxlength="24" onkeydown="if(event.key==='Enter')addGoalTag()"><select class="inp" id="new-goal-tag-group" aria-label="Group for new tag" style="width:auto;max-width:38%;flex:none"></select><button class="btn btn-purple btn-xs" onclick="addGoalTag()">Add</button></div>
+        <div class="row" style="margin-top:6px"><input class="inp" id="new-tag-group" placeholder="New group name (e.g. Area, Priority)..." maxlength="24" onkeydown="if(event.key==='Enter')addTagGroup()"><button class="btn btn-ghost btn-xs" onclick="addTagGroup()">+ Group</button></div>
         <div class="goal-tag-list" id="goal-tag-list"></div>
       </div>
     </div>
@@ -666,6 +678,7 @@ const parseDt=s=>s?new Date(s+'T12:00:00'):null;
 
 let goals=LS('lt2_goals')||[];
 let goalTags=LS('lt2_goal_tags')||[];
+let goalTagGroups=LS('lt2_goal_tag_groups')||[];
 let goalSort=LS('lt2_goal_sort')||'manual';
 let goalTagFilter=LS('lt2_goal_filter')||'all';
 let habits=LS('lt2_habits')||[
@@ -690,7 +703,7 @@ let nodeDateState={};  // nodeId -> bool open
 let goalDateState={};  // goalId -> bool open
 let nodeDragState=null;
 
-function saveAll(){LSS('lt2_goals',goals);LSS('lt2_goal_tags',goalTags);LSS('lt2_goal_sort',goalSort);LSS('lt2_goal_filter',goalTagFilter);LSS('lt2_timers',timers);LSS('lt2_stopwatch',stopwatch);LSS('lt2_habits',habits);LSS('lt2_history',history);LSS('lt2_woops',woops);LSS('lt2_dur',sprintDur);}
+function saveAll(){LSS('lt2_goals',goals);LSS('lt2_goal_tags',goalTags);LSS('lt2_goal_tag_groups',goalTagGroups);LSS('lt2_goal_sort',goalSort);LSS('lt2_goal_filter',goalTagFilter);LSS('lt2_timers',timers);LSS('lt2_stopwatch',stopwatch);LSS('lt2_habits',habits);LSS('lt2_history',history);LSS('lt2_woops',woops);LSS('lt2_dur',sprintDur);}
 
 function toggleNodeDates(id){
   nodeDateState[id]=!nodeDateState[id];
@@ -1117,6 +1130,7 @@ function pushAiGoal(){
 function addGoalTop(){const inp=document.getElementById('new-goal-inp');const name=inp.value.trim();if(!name)return;goals.push({id:uid(),name,collapsed:false,startDate:'',deadline:'',children:[]});activeGoalIdx=goals.length-1;activeStepId=null;inp.value='';saveAll();renderGoalTabs();renderGoalContent();}
 let inlineEditing=false,_tap={id:null,t:0,timer:null};
 function tapItem(kind,id,e,single){
+  if(kind==='goal'&&Date.now()<tabClickBlockUntil)return;
   const now=Date.now();clearTimeout(_tap.timer);
   if(_tap.id===id&&now-_tap.t<350){_tap.id=null;startInlineEdit(kind,id,e.currentTarget);return;}
   _tap.id=id;_tap.t=now;_tap.timer=setTimeout(()=>{_tap.id=null;single();},280);
@@ -1127,12 +1141,13 @@ function inlineTarget(kind,id){
   if(kind==='step'){const o=findNode(id,goals);return mk(o,()=>o.name,v=>{o.name=v;},200);}
   if(kind==='habit'){const o=habits.find(h=>h.id===id);return mk(o,()=>o.name,v=>{o.name=v;},200);}
   if(kind==='tag'){const o=goalTags.find(t=>t.id===id);return mk(o,()=>o.name,v=>{o.name=v;},24);}
+  if(kind==='tagGroup'){const o=goalTagGroups.find(t=>t.id===id);return mk(o,()=>o.name,v=>{o.name=v;},24);}
   if(kind==='wish'||kind==='obstacle'){const o=goals.find(g=>g.id===id);return mk(o,()=>o[kind]||'',v=>{o[kind]=v;},500,true);}
   return null;
 }
 function refreshAfterInlineEdit(kind){
   if(kind==='habit'){renderHabits();return;}
-  if(kind==='tag')renderGoalTagControls();
+  if(kind==='tag'||kind==='tagGroup')renderGoalTagControls();
   renderGoalTabs();renderGoalContent();
 }
 function startInlineEdit(kind,id,el){
@@ -1158,22 +1173,59 @@ function deleteGoal(i){if(!confirm('Delete this goal?'))return;goals.splice(i,1)
 function setGoalSort(v){goalSort=v;saveAll();renderGoalTabs();}
 function setGoalTagFilter(v){goalTagFilter=v;saveAll();renderGoalTabs();renderGoalContent();}
 function toggleGoalTagManager(){const el=document.getElementById('goal-tag-manager');el?.classList.toggle('open');renderGoalTagControls();if(el?.classList.contains('open'))setTimeout(()=>document.getElementById('new-goal-tag')?.focus(),0);}
+function addTagGroup(){
+  const inp=document.getElementById('new-tag-group'),name=(inp?.value||'').trim();if(!name)return;
+  if(goalTagGroups.some(g=>g.name.toLowerCase()===name.toLowerCase())){showNotify('GROUP ALREADY EXISTS');return;}
+  goalTagGroups.push({id:uid(),name:name.slice(0,24)});inp.value='';saveAll();renderGoalTagControls();
+}
+function deleteTagGroup(id){
+  if(!confirm('Delete this group? Its tags stay, ungrouped.'))return;
+  goalTagGroups=goalTagGroups.filter(g=>g.id!==id);goalTags.forEach(t=>{if(t.groupId===id)delete t.groupId;});saveAll();renderGoalTagControls();
+}
+function setTagGroup(tagId,groupId){const t=goalTags.find(x=>x.id===tagId);if(!t)return;if(groupId)t.groupId=groupId;else delete t.groupId;saveAll();renderGoalTagControls();}
+function tagGroupsView(){
+  const known=id=>goalTagGroups.some(g=>g.id===id);
+  const out=[];const ungrouped=goalTags.filter(t=>!known(t.groupId));
+  if(ungrouped.length||!goalTagGroups.length)out.push({group:null,tags:ungrouped});
+  goalTagGroups.forEach(gr=>out.push({group:gr,tags:goalTags.filter(t=>t.groupId===gr.id)}));
+  return out;
+}
 function addGoalTag(){
   const inp=document.getElementById('new-goal-tag'),name=(inp?.value||'').trim();if(!name)return;
   if(goalTags.some(t=>t.name.toLowerCase()===name.toLowerCase())){showNotify('TAG ALREADY EXISTS');return;}
   const colors=['#6b9e7a','#9b7fff','#d48772','#5d94ad','#b58a45','#8c72a8'];
-  goalTags.push({id:uid(),name,color:colors[goalTags.length%colors.length]});inp.value='';saveAll();renderGoalTagControls();renderGoalContent();
+  const gsel=document.getElementById('new-goal-tag-group');const tag={id:uid(),name,color:colors[goalTags.length%colors.length]};if(gsel&&gsel.value&&goalTagGroups.some(g=>g.id===gsel.value))tag.groupId=gsel.value;goalTags.push(tag);inp.value='';saveAll();renderGoalTagControls();renderGoalContent();
 }
 function deleteGoalTag(id){if(!confirm('Delete this tag? Goals will stay intact.'))return;goalTags=goalTags.filter(t=>t.id!==id);goals.forEach(g=>g.tagIds=(g.tagIds||[]).filter(x=>x!==id));if(goalTagFilter===id)goalTagFilter='all';saveAll();renderGoalTagControls();renderGoalTabs();renderGoalContent();}
 function toggleGoalTag(goalId,tagId){const g=goals.find(x=>x.id===goalId);if(!g)return;g.tagIds=g.tagIds||[];g.tagIds=g.tagIds.includes(tagId)?g.tagIds.filter(x=>x!==tagId):g.tagIds.concat(tagId);saveAll();renderGoalTabs();renderGoalContent();}
 function renderGoalTagControls(){
   if(inlineEditing)return;
-  const filter=document.getElementById('goal-tag-filter'),sort=document.getElementById('goal-sort-select'),list=document.getElementById('goal-tag-list'),activeList=document.getElementById('goal-active-tag-list');
-  if(filter){filter.innerHTML='<option value="all">All tags</option>'+goalTags.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('');filter.value=goalTags.some(t=>t.id===goalTagFilter)?goalTagFilter:'all';}
+  const filter=document.getElementById('goal-tag-filter'),sort=document.getElementById('goal-sort-select'),list=document.getElementById('goal-tag-list'),activeList=document.getElementById('goal-active-tag-list'),gsel=document.getElementById('new-goal-tag-group');
+  const views=tagGroupsView();
+  if(filter){
+    const opt=t=>`<option value="${t.id}">${esc(t.name)}</option>`;
+    filter.innerHTML='<option value="all">All tags</option>'+views.map(v=>v.group?(v.tags.length?`<optgroup label="${esc(v.group.name)}">${v.tags.map(opt).join('')}</optgroup>`:''):v.tags.map(opt).join('')).join('');
+    filter.value=goalTags.some(t=>t.id===goalTagFilter)?goalTagFilter:'all';
+  }
   if(sort)sort.value=goalSort;
-  if(list)list.innerHTML=goalTags.length?goalTags.map(t=>`<span class="goal-tag" style="--tag-color:${t.color}"><span class="goal-tag-dot"></span><button class="goal-tag-remove" onclick="tapItem('tag','${t.id}',event,()=>{})" title="Double-click to rename">${esc(t.name)}</button><button class="goal-tag-remove" onclick="deleteGoalTag('${t.id}')" title="Delete ${esc(t.name)}">×</button></span>`).join(''):'<span class="goal-tag-empty">No tags yet. Type a name above to add one.</span>';
+  if(gsel){const prev=gsel.value;gsel.innerHTML='<option value="">No group</option>'+goalTagGroups.map(g=>`<option value="${g.id}">${esc(g.name)}</option>`).join('');gsel.value=goalTagGroups.some(g=>g.id===prev)?prev:'';gsel.style.display=goalTagGroups.length?'':'none';}
+  const hasGroups=goalTagGroups.length>0;
+  if(list){
+    if(!goalTags.length&&!hasGroups)list.innerHTML='<span class="goal-tag-empty">No tags yet. Type a name above to add one.</span>';
+    else list.innerHTML=views.map(v=>{
+      const head=v.group?`<div class="tag-group-head"><span class="tag-group-label editable" title="Double-click to rename" onclick="tapItem('tagGroup','${v.group.id}',event,()=>{})">${esc(v.group.name)}</span><button class="tag-group-del" onclick="deleteTagGroup('${v.group.id}')" title="Delete group">×</button></div>`:(hasGroups?'<div class="tag-group-head"><span class="tag-group-label">Ungrouped</span></div>':'');
+      const chips=v.tags.map(t=>`<span class="goal-tag" style="--tag-color:${t.color}"><span class="goal-tag-dot"></span><button class="goal-tag-remove" onclick="tapItem('tag','${t.id}',event,()=>{})" title="Double-click to rename">${esc(t.name)}</button>${hasGroups?`<span class="goal-tag-move" title="Move to group">⇅<select onchange="setTagGroup('${t.id}',this.value)" aria-label="Group for ${esc(t.name)}"><option value=""${t.groupId?'':' selected'}>No group</option>${goalTagGroups.map(g=>`<option value="${g.id}"${t.groupId===g.id?' selected':''}>${esc(g.name)}</option>`).join('')}</select></span>`:''}<button class="goal-tag-remove" onclick="deleteGoalTag('${t.id}')" title="Delete ${esc(t.name)}">×</button></span>`).join('')||'<span class="goal-tag-empty">No tags in this group</span>';
+      return`<div class="tag-group">${head}${chips}</div>`;
+    }).join('');
+  }
   const g=goals[activeGoalIdx];
-  if(activeList)activeList.innerHTML=goalTags.length&&g?goalTags.map(t=>`<button class="goal-tag${(g.tagIds||[]).includes(t.id)?' on':''}" style="--tag-color:${t.color}" onclick="toggleGoalTag('${g.id}','${t.id}')"><span class="goal-tag-dot"></span>${esc(t.name)}</button>`).join(''):'<span class="goal-tag-empty">No tags yet — use “+ Add tag”.</span>';
+  if(activeList){
+    if(!goalTags.length||!g)activeList.innerHTML='<span class="goal-tag-empty">No tags yet — use “+ Add tag”.</span>';
+    else activeList.innerHTML=views.filter(v=>v.tags.length).map(v=>{
+      const head=v.group?`<div class="tag-group-head"><span class="tag-group-label">${esc(v.group.name)}</span></div>`:(hasGroups?'<div class="tag-group-head"><span class="tag-group-label">Ungrouped</span></div>':'');
+      return`<div class="tag-group">${head}${v.tags.map(t=>`<button class="goal-tag${(g.tagIds||[]).includes(t.id)?' on':''}" style="--tag-color:${t.color}" onclick="toggleGoalTag('${g.id}','${t.id}')"><span class="goal-tag-dot"></span>${esc(t.name)}</button>`).join('')}</div>`;
+    }).join('');
+  }
 }
 function jumpToHabitDate(k){habitViewDate=k;switchTab('habits');renderHabits();}
 function jumpToGoalCalDate(k){switchTab('history');jumpToHistoryDate(k);}
@@ -1354,26 +1406,101 @@ function countNodes(arr){let t=0;arr.forEach(n=>{t++;t+=countNodes(n.children);}
 function countDone(arr){let t=0;arr.forEach(n=>{if(n.done)t++;t+=countDone(n.children);});return t;}
 function goalProgress(g){const total=countNodes(g.children);if(!total)return 0;return Math.round(countDone(g.children)/total*100);}
 function goalProgressColor(pct){if(pct>=100)return'#5aaf78';if(pct>=60)return'#6b9e7a';if(pct>=30)return'#f5a623';return'#e05555';}
-function renderGoalTabs(){
-  if(inlineEditing)return;
-  const el=document.getElementById('goal-tabs');if(!el)return;
+function getVisibleGoalTabs(){
   let visible=goals.map((g,i)=>({g,i})).filter(x=>goalTagFilter==='all'||(x.g.tagIds||[]).includes(goalTagFilter));
   if(goalSort==='name')visible.sort((a,b)=>a.g.name.localeCompare(b.g.name));
   if(goalSort==='progress')visible.sort((a,b)=>goalProgress(b.g)-goalProgress(a.g));
   if(goalSort==='deadline')visible.sort((a,b)=>(a.g.deadline||'9999-12-31').localeCompare(b.g.deadline||'9999-12-31'));
+  return visible;
+}
+function renderGoalTabs(){
+  if(inlineEditing)return;
+  const el=document.getElementById('goal-tabs');if(!el)return;
+  const visible=getVisibleGoalTabs();
   if(visible.length&&!visible.some(x=>x.i===activeGoalIdx))activeGoalIdx=visible[0].i;
   renderGoalTagControls();
   el.innerHTML=visible.map(({g,i})=>{
     const pct=goalProgress(g);const isOn=i===activeGoalIdx;
     const fillColor=isOn?'rgba(255,255,255,0.85)':goalProgressColor(pct);
-    return`<div class="gtab${isOn?' on':''}">
-      <button style="all:unset;display:flex;flex-direction:column;align-items:center;gap:5px;width:100%;cursor:pointer" onclick="tapItem('goal','${g.id}',event,()=>selectGoal(${i}))" title="Double-click to rename">
+    return`<div class="gtab${isOn?' on':''}" data-gid="${g.id}" onmousedown="tabDragStart('mouse',event,'${g.id}')" ontouchstart="tabDragStart('touch',event,'${g.id}')">
+      <button style="all:unset;display:flex;flex-direction:column;align-items:center;gap:5px;width:100%;cursor:pointer" onclick="tapItem('goal','${g.id}',event,()=>selectGoal(${i}))" title="Double-click to rename · drag (touch: hold, then drag) to reorder">
         <span>${esc(g.name)}</span>
         <div class="gtab-bar"><div class="gtab-fill" style="width:${pct}%;background:${fillColor}"></div></div>
       </button>
       <button class="gtab-delete" onclick="event.stopPropagation();deleteGoal(${i})" aria-label="Delete ${esc(g.name)}">×</button>
     </div>`;
   }).join('')||'<div class="goal-tag-empty" style="padding:8px 0">No goals match this tag.</div>';
+}
+
+// ── GOAL TAB DRAG & DROP ──────────────────────────
+let tabDrag=null,tabClickBlockUntil=0;
+function tabDragStart(kind,e,gid){
+  if(inlineEditing||tabDrag||e.target.closest('.gtab-delete'))return;
+  if(kind==='mouse'&&e.button!==0)return;
+  const pt=kind==='touch'?e.touches[0]:e;if(!pt)return;
+  tabDrag={kind,id:gid,tab:e.currentTarget,x0:pt.clientX,y0:pt.clientY,x:pt.clientX,active:false,targetId:null,after:false,timer:null,scroller:null};
+  if(kind==='touch'){
+    tabDrag.timer=setTimeout(tabDragActivate,350);
+    document.addEventListener('touchmove',tabDragTouchMove,{passive:false});
+    document.addEventListener('touchend',tabDragFinish);
+    document.addEventListener('touchcancel',tabDragCleanup);
+  }else{
+    document.addEventListener('mousemove',tabDragMouseMove);
+    document.addEventListener('mouseup',tabDragFinish);
+  }
+}
+function tabDragActivate(){
+  const d=tabDrag;if(!d||d.active)return;d.active=true;d.tab.classList.add('dragging');
+  try{if(navigator.vibrate)navigator.vibrate(8);}catch(e){}
+  d.scroller=setInterval(()=>{const sc=document.getElementById('goal-tabs');if(!sc)return;const r=sc.getBoundingClientRect();if(d.x<r.left+40)sc.scrollLeft-=12;else if(d.x>r.right-40)sc.scrollLeft+=12;tabDragTarget();},30);
+}
+function tabDragMouseMove(e){
+  const d=tabDrag;if(!d)return;d.x=e.clientX;
+  if(!d.active){if(Math.hypot(e.clientX-d.x0,e.clientY-d.y0)<6)return;tabDragActivate();}
+  e.preventDefault();tabDragTarget();
+}
+function tabDragTouchMove(e){
+  const d=tabDrag;if(!d)return;const t=e.touches[0];if(!t)return;d.x=t.clientX;
+  if(!d.active){if(Math.hypot(t.clientX-d.x0,t.clientY-d.y0)>8)tabDragCleanup();return;}
+  e.preventDefault();tabDragTarget();
+}
+function tabDragTarget(){
+  const d=tabDrag;if(!d||!d.active)return;
+  const tabs=[...document.querySelectorAll('#goal-tabs .gtab')].filter(t=>t!==d.tab);
+  tabs.forEach(t=>t.classList.remove('drop-before','drop-after'));
+  d.targetId=null;if(!tabs.length)return;
+  let target=tabs[tabs.length-1],after=true;
+  for(const t of tabs){const r=t.getBoundingClientRect();if(d.x<r.left+r.width/2){target=t;after=false;break;}}
+  d.targetId=target.dataset.gid;d.after=after;target.classList.add(after?'drop-after':'drop-before');
+}
+function tabDragFinish(e){
+  const d=tabDrag;if(!d)return;const{id,targetId,after,active}=d;tabDragCleanup();
+  if(!active)return;
+  tabClickBlockUntil=Date.now()+400;
+  if(e&&e.type==='touchend'&&e.cancelable)e.preventDefault();
+  if(targetId)reorderGoalTabs(id,targetId,after);
+}
+function tabDragCleanup(){
+  const d=tabDrag;if(!d)return;clearTimeout(d.timer);clearInterval(d.scroller);d.tab.classList.remove('dragging');
+  document.querySelectorAll('#goal-tabs .gtab').forEach(t=>t.classList.remove('drop-before','drop-after'));
+  document.removeEventListener('mousemove',tabDragMouseMove);document.removeEventListener('mouseup',tabDragFinish);
+  document.removeEventListener('touchmove',tabDragTouchMove);document.removeEventListener('touchend',tabDragFinish);document.removeEventListener('touchcancel',tabDragCleanup);
+  tabDrag=null;
+}
+function reorderGoalTabs(dragId,targetId,after){
+  if(dragId===targetId)return;
+  const vis=getVisibleGoalTabs();const order=vis.map(x=>x.g);
+  const from=order.findIndex(g=>g.id===dragId);if(from<0)return;
+  const[moved]=order.splice(from,1);
+  let to=order.findIndex(g=>g.id===targetId);if(to<0)return;if(after)to++;
+  order.splice(to,0,moved);
+  const slots=vis.map(x=>x.i).sort((a,b)=>a-b);
+  const activeId=goals[activeGoalIdx]&&goals[activeGoalIdx].id;
+  slots.forEach((slot,k)=>{goals[slot]=order[k];});
+  const wasSorted=goalSort!=='manual';goalSort='manual';
+  const ai=goals.findIndex(g=>g.id===activeId);if(ai>=0)activeGoalIdx=ai;
+  saveAll();renderGoalTabs();renderGoalContent();
+  if(wasSorted)showNotify('ORDER SET TO CUSTOM');
 }
 
 function renderGoalContent(){
@@ -2275,7 +2402,7 @@ restoreTimerState();
   (function(){
     if(location.hostname==='127.0.0.1'||location.hostname==='localhost')return;
     var S='https://vgurpottnlcixzjmatlz.supabase.co',K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZndXJwb3R0bmxjaXh6am1hdGx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDc2MTMsImV4cCI6MjA5NDc4MzYxM30.60bgWxj79Md4eNZYrfnYEQgUNjQr4SJEK27QcTsoRr0',TN='life_tracker_data',U='default';
-    var KEYS=['lt2_goals','lt2_goal_tags','lt2_goal_sort','lt2_goal_filter','lt2_habits','lt2_timers','lt2_history','lt2_woops','lt2_dur','lt2_wheel_pin','lt2_hlog','lt2_xp','lt2_wheel_table','bp_state','bp_log','bp_sit'];
+    var KEYS=['lt2_goals','lt2_goal_tags','lt2_goal_tag_groups','lt2_goal_sort','lt2_goal_filter','lt2_habits','lt2_timers','lt2_history','lt2_woops','lt2_dur','lt2_wheel_pin','lt2_hlog','lt2_xp','lt2_wheel_table','bp_state','bp_log','bp_sit'];
     var SLOW={lt2_timers:1,bp_sit:1}; // rewritten every second while a timer runs — sync sparsely
     var pending={},lastSent={},askedSecret=false;
     function hdr(){
@@ -2327,6 +2454,7 @@ restoreTimerState();
           try{
             goals=LS('lt2_goals')||[];
             goalTags=LS('lt2_goal_tags')||[];
+            goalTagGroups=LS('lt2_goal_tag_groups')||[];
             goalSort=LS('lt2_goal_sort')||'manual';
             goalTagFilter=LS('lt2_goal_filter')||'all';
             habits=LS('lt2_habits')||habits;
