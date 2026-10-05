@@ -218,6 +218,10 @@ textarea.inp{resize:none;line-height:1.6}
 .p-sp-badge{font-size:11px;padding:2px 9px;border-radius:var(--radius-pill);background:var(--accent);color:white;flex-shrink:0;font-weight:600}
 .p-date-badge{font-size:10px;padding:2px 8px;border-radius:var(--radius-pill);background:var(--bg3);color:var(--text3);flex-shrink:0;border:1px solid var(--border)}
 .p-date-badge.has-date{color:var(--accent-d);border-color:var(--accent-mid);background:var(--accent-dim)}
+.p-tags{flex:1 1 100%;display:flex;flex-wrap:wrap;gap:4px;padding-left:72px;margin-top:-2px;cursor:pointer}
+.p-tagchip{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;line-height:1.2;padding:2px 7px;border-radius:var(--radius-pill);border:1px solid var(--tag-color,var(--border2));background:color-mix(in srgb,var(--tag-color,var(--accent)) 12%,var(--bg1));color:var(--text2)}
+.node-tags{display:none;padding:2px 12px 10px 40px;flex-direction:column;gap:6px}
+.node-tags.open{display:flex}
 .add-inline{display:none;gap:6px;padding:6px 10px;align-items:center}
 .add-inline.open{display:flex}
 
@@ -236,6 +240,8 @@ textarea.inp{resize:none;line-height:1.6}
   .p-row{gap:7px;padding:10px 8px}
   .p-acts{width:100%;padding-left:38px;justify-content:flex-end}
   .p-kids{padding-left:12px;margin-left:6px}
+  .p-tags{padding-left:62px}
+  .node-tags{padding-left:20px}
   .p-name{flex-basis:110px;min-width:min(100px,100%)}
 }
 
@@ -706,6 +712,7 @@ let swMode=!!stopwatch.running,swRunning=!!stopwatch.running,swSec=0,swInt=null;
 let fwEditingId=null;
 // UI state — not persisted (collapses reset on refresh, intentional)
 let ganttCollapsed=!!LS('lt2_gantt_collapsed');
+let nodeTagState={};
 let nodeDateState={};  // nodeId -> bool open
 let goalDateState={};  // goalId -> bool open
 let nodeDragState=null;
@@ -1226,7 +1233,7 @@ function addGoalTag(){
   const colors=['#6b9e7a','#9b7fff','#d48772','#5d94ad','#b58a45','#8c72a8'];
   const gsel=document.getElementById('new-goal-tag-group');const tag={id:uid(),name,color:colors[goalTags.length%colors.length]};if(gsel&&gsel.value&&goalTagGroups.some(g=>g.id===gsel.value))tag.groupId=gsel.value;goalTags.push(tag);inp.value='';saveAll();renderGoalTagControls();renderGoalContent();
 }
-function deleteGoalTag(id){if(!confirm('Delete this tag? Goals will stay intact.'))return;goalTags=goalTags.filter(t=>t.id!==id);goals.forEach(g=>g.tagIds=(g.tagIds||[]).filter(x=>x!==id));if(goalTagFilter===id)goalTagFilter='all';saveAll();renderGoalTagControls();renderGoalTabs();renderGoalContent();}
+function deleteGoalTag(id){if(!confirm('Delete this tag? Goals will stay intact.'))return;goalTags=goalTags.filter(t=>t.id!==id);const strip=arr=>arr.forEach(n=>{if(n.tagIds)n.tagIds=n.tagIds.filter(x=>x!==id);strip(n.children||[]);});goals.forEach(g=>{g.tagIds=(g.tagIds||[]).filter(x=>x!==id);strip(g.children);});if(goalTagFilter===id)goalTagFilter='all';saveAll();renderGoalTagControls();renderGoalTabs();renderGoalContent();}
 function toggleGoalTag(goalId,tagId){const g=goals.find(x=>x.id===goalId);if(!g)return;g.tagIds=g.tagIds||[];g.tagIds=g.tagIds.includes(tagId)?g.tagIds.filter(x=>x!==tagId):g.tagIds.concat(tagId);saveAll();renderGoalTabs();renderGoalContent();}
 function renderGoalTagControls(){
   if(inlineEditing)return;
@@ -1335,6 +1342,24 @@ function keyboardMoveNode(event,id){
   const delta=event.key==='ArrowUp'?-1:1,target=loc.array[loc.index+delta];if(target)moveNodeRelative(id,target.id,delta>0);
 }
 
+function toggleNodeTagPicker(id){nodeTagState[id]=!nodeTagState[id];renderGoalContent();}
+function toggleNodeTag(nid,tid){
+  const n=findNode(nid,goals);if(!n)return;
+  n.tagIds=n.tagIds||[];n.tagIds=n.tagIds.includes(tid)?n.tagIds.filter(x=>x!==tid):n.tagIds.concat(tid);
+  saveAll();renderGoalContent();
+}
+function nodeTagChips(node){
+  const tags=(node.tagIds||[]).map(id=>goalTags.find(t=>t.id===id)).filter(Boolean);
+  return tags.map(t=>`<span class="p-tagchip" style="--tag-color:${t.color}"><span class="goal-tag-dot"></span>${esc(t.name)}</span>`).join('');
+}
+function nodeTagPicker(node){
+  if(!goalTags.length)return'<span class="goal-tag-empty">No tags yet — create some with “+ Add tag” at the top.</span>';
+  const hasGroups=goalTagGroups.length>0;
+  return tagGroupsView().filter(v=>v.tags.length).map(v=>{
+    const head=v.group?`<div class="tag-group-head"><span class="tag-group-label">${esc(v.group.name)}</span></div>`:(hasGroups?'<div class="tag-group-head"><span class="tag-group-label">Ungrouped</span></div>':'');
+    return`<div class="tag-group">${head}${v.tags.map(t=>`<button class="goal-tag${(node.tagIds||[]).includes(t.id)?' on':''}" style="--tag-color:${t.color}" onclick="toggleNodeTag('${node.id}','${t.id}')"><span class="goal-tag-dot"></span>${esc(t.name)}</button>`).join('')}</div>`;
+  }).join('');
+}
 function renderPNode(node,depth){
   const sel=activeStepId===node.id;const hasC=node.children.length>0;
   const t=timers[node.id];const totalSp=(t?t.done:0)+countChildSp(node);
@@ -1344,6 +1369,7 @@ function renderPNode(node,depth){
   const isOverdue=hasDeadline&&node.deadline<TODAY&&!node.done;
   const deadlineBadge=hasDeadline?`<span class="p-date-badge has-date" style="${isOverdue?'color:#ff4444;border-color:#ff444488':''}">${isOverdue?'⚠ ':''}${fmtShort(node.deadline)}</span>`:'';
   const dOpen=nodeDateState[node.id]||false;
+  const tOpen=nodeTagState[node.id]||false;const chips=nodeTagChips(node);
 
   return`<div class="p-node" data-node-id="${node.id}">
     <div class="p-row${sel?' sel':''}">
@@ -1356,9 +1382,11 @@ function renderPNode(node,depth){
       <button class="date-toggle${dOpen?' open':''}${hasAnyDate?' has':''}" onclick="toggleNodeDates('${node.id}')" title="Toggle timeline" aria-label="Toggle timeline for ${esc(node.name)}"><i class="timeline-icon">◷</i></button>
       ${hasC?`<button class="btn btn-ghost btn-xs" onclick="toggleCollapse('${node.id}')" style="font-size:11px">${node.collapsed?'▸':'▾'}</button>`:''}
       <button class="btn btn-ghost btn-xs" onclick="toggleFocus('${node.id}')" style="color:${node.inFocus?'var(--accent)':'var(--text3)'}">DF</button>
+      <button class="btn btn-ghost btn-xs" onclick="toggleNodeTagPicker('${node.id}')" title="Tags" aria-label="Tags for ${esc(node.name)}" style="color:${chips||tOpen?'var(--accent)':'var(--text3)'}">#</button>
       <button class="btn btn-ghost btn-xs" onclick="showInline('${node.id}')">+</button>
       <button class="btn btn-danger btn-xs" onclick="removeNode('${node.id}')">×</button>
-    </div></div>
+    </div>${chips?`<div class="p-tags" onclick="toggleNodeTagPicker('${node.id}')">${chips}</div>`:''}</div>
+    <div class="node-tags${tOpen?' open':''}">${tOpen?nodeTagPicker(node):''}</div>
     <div class="node-dates${dOpen?' open':''}" id="nd-${node.id}">
       <div class="date-row">
         <div><div class="date-lbl">Start</div><input class="inp-date" type="date" value="${node.startDate||''}" onchange="saveNodeDate('${node.id}','startDate',this.value)"></div>
@@ -1574,7 +1602,7 @@ function renderGoalContent(){
   h+=`<div class="focus-card"><div class="card-label" style="margin-bottom:8px;color:var(--accent)">Daily Focus <span style="font-weight:400;color:var(--text3)">— ACROSS ALL GOALS · TAP DF ON ANY STEP</span></div>`;
   if(focusNodes.length){focusNodes.forEach(({n,gi})=>{const isSel=activeStepId===n.id;const sp=timers[n.id]?timers[n.id].done:0;const otherGoal=gi!==activeGoalIdx?goals[gi]:null;h+=`<div class="focus-item${isSel?' act':''}" onclick="selectFocusItem('${n.id}')">
     <div style="width:6px;height:6px;border-radius:1px;background:${isSel?'var(--accent)':'var(--text4)'};flex-shrink:0"></div>
-    <span onclick="event.stopPropagation();tapItem('step','${n.id}',event,()=>selectFocusItem('${n.id}'))" title="Double-click to rename" style="flex:1;min-width:0;overflow-wrap:break-word;font-size:15px;color:${isSel?'var(--accent-d)':'var(--text2)'};font-weight:${isSel?'600':'400'}">${esc(n.name)}${otherGoal?`<span style="display:block;font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-top:1px">${esc(otherGoal.name)}</span>`:''}</span>
+    <span onclick="event.stopPropagation();tapItem('step','${n.id}',event,()=>selectFocusItem('${n.id}'))" title="Double-click to rename" style="flex:1;min-width:0;overflow-wrap:break-word;font-size:15px;color:${isSel?'var(--accent-d)':'var(--text2)'};font-weight:${isSel?'600':'400'}">${esc(n.name)}${(n.tagIds&&n.tagIds.length)?`<span class="p-tags" style="padding:3px 0 0">${nodeTagChips(n)}</span>`:''}${otherGoal?`<span style="display:block;font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-top:1px">${esc(otherGoal.name)}</span>`:''}</span>
     ${sp>0?`<span style="font-size:10px;color:var(--accent-d);font-weight:600">${sp} sp</span>`:''}
     <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();toggleFocus('${n.id}')">✕</button>
   </div>`;});}else{h+=`<div style="font-size:12px;color:var(--text3);padding:6px 0;font-family:var(--mono);text-transform:uppercase;letter-spacing:.1em">No items — tap DF on any step</div>`;}
