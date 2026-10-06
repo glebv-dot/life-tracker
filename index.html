@@ -63,9 +63,17 @@ input,button,textarea,select{font-family:var(--font)}
 .inp::placeholder{color:var(--text3)}
 textarea.inp{resize:none;line-height:1.6}
 .inp-date{width:100%;background:var(--bg2);border:1.5px solid transparent;border-radius:var(--radius-sm);color:var(--text2);font-family:var(--mono);font-size:11px;padding:7px 10px;outline:none;transition:border-color .15s;cursor:pointer;-webkit-appearance:none;appearance:none}
+.datef{position:relative;display:flex;align-items:center;gap:6px}
+.datef-txt{flex:1;min-width:0;width:auto;letter-spacing:.02em}
+.datef-txt.bad{border-color:#e05555;color:#e05555}
+.datef-txt.overdue{border-color:#ff444488;color:#ff4444}
+.datef-pick{position:relative;flex:none;width:34px;height:31px;border-radius:var(--radius-sm);background:var(--bg2);color:var(--text3);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.datef-pick:hover{color:var(--accent)}
+.datef-pick input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0}
+@media(max-width:480px){.datef-txt{font-size:16px}}
 .inp-date:focus{border-color:var(--accent);color:var(--text)}
 .inp-date::-webkit-calendar-picker-indicator{opacity:.4;cursor:pointer}
-.date-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.date-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin-top:8px}
 .date-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;font-weight:600}
 
 /* BUTTONS */
@@ -227,9 +235,9 @@ textarea.inp{resize:none;line-height:1.6}
 
 /* collapsible date rows */
 .node-dates{padding:0 12px 0 40px;max-height:0;overflow:hidden;transition:max-height .22s ease,opacity .2s ease,padding .22s ease;opacity:0}
-.node-dates.open{max-height:80px;opacity:1;padding:2px 12px 8px 40px}
+.node-dates.open{max-height:170px;opacity:1;padding:2px 12px 8px 40px}
 .goal-dates-body{max-height:0;overflow:hidden;transition:max-height .22s ease,opacity .2s ease;opacity:0;padding:0 18px}
-.goal-dates-body.open{max-height:80px;opacity:1;padding:0 18px 14px}
+.goal-dates-body.open{max-height:170px;opacity:1;padding:0 18px 14px}
 .date-toggle{display:inline-flex;align-items:center;gap:4px;cursor:pointer;background:none;border:none;color:var(--text3);font-size:10px;font-weight:600;padding:2px 4px;border-radius:6px;transition:color .15s;flex-shrink:0;line-height:1}
 .date-toggle:hover{color:var(--text)}
 .date-toggle .timeline-icon{display:inline-block;font-family:var(--mono);font-style:normal;font-size:18px;line-height:1}
@@ -1124,7 +1132,7 @@ function renderGoalBreakdownForm(error){
     <div class="ai-field"><label>Current situation / resources</label><textarea class="inp" id="aig-situation" rows="2" placeholder="What already exists? What skills, budget or help do you have?">${esc(c.situation||'')}</textarea></div>
     <div class="ai-field"><label>Constraints and preferences</label><textarea class="inp" id="aig-constraints" rows="2" placeholder="Budget, tools, exclusions, quality bar, fixed commitments…">${esc(c.constraints||'')}</textarea></div>
     <div class="ai-two">
-      <div class="ai-field"><label>Deadline</label><input class="inp-date" style="padding:11px 12px;font-size:12px" id="aig-deadline" type="date" min="${TODAY}" value="${esc(c.deadline||'')}"></div>
+      <div class="ai-field"><label>Deadline</label><input type="hidden" id="aig-deadline" value="${esc(c.deadline||'')}">${dateFieldHTML({kind:'ai',target:'aig-deadline',value:c.deadline||''})}</div>
       <div class="ai-field"><label>Hours per week</label><input class="inp" id="aig-hours" type="number" min="1" max="80" value="${esc(c.hours||'5')}"></div>
     </div>
     ${error?`<div style="color:#b04432;background:var(--peach-dim);border:1px solid var(--peach-mid);padding:10px 12px;border-radius:var(--radius-sm);font-size:12px;margin-bottom:12px">${esc(error)}</div>`:''}
@@ -1277,8 +1285,43 @@ function jumpToHistoryDate(k){
   items.forEach(el=>el.style.background=el.dataset.date===k?'var(--accent-dim)':'');
 }
 
-function saveGoalDate(gid,field,val){const g=goals.find(x=>x.id===gid);if(g){g[field]=val;saveAll();renderGoalContent();}}
-function saveNodeDate(nid,field,val){const n=findNode(nid,goals);if(n){n[field]=val;saveAll();renderGoalContent();}}
+function isoToDMY(iso){const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(iso||'');return m?m[3]+'/'+m[2]+'/'+m[1]:'';}
+function parseDMY(str){
+  const m=/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(str.trim());if(!m)return null;
+  const d=+m[1],mo=+m[2],y=+m[3];if(y<1900||y>2100||mo<1||mo>12||d<1)return null;
+  const dt=new Date(y,mo-1,d);if(dt.getFullYear()!==y||dt.getMonth()!==mo-1||dt.getDate()!==d)return null;
+  return y+'-'+String(mo).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+}
+function dateFieldHTML(o){
+  const data=`data-kind="${o.kind}" data-id="${o.id||''}" data-field="${o.field||''}" data-target="${o.target||''}"`;
+  return`<div class="datef"><input class="inp-date datef-txt${o.overdue?' overdue':''}" type="text" inputmode="numeric" autocomplete="off" placeholder="DD/MM/YYYY" maxlength="10" value="${isoToDMY(o.value)}" ${data} oninput="dateMask(this)" onchange="dateFieldCommit(this)" onkeydown="if(event.key==='Enter')this.blur()"><span class="datef-pick" title="Pick from calendar"><svg viewBox="0 0 20 20" width="16" height="16" fill="none"><rect x="3" y="4" width="14" height="13" rx="1.5" stroke="currentColor" stroke-width="1.5"/><line x1="3" y1="8" x2="17" y2="8" stroke="currentColor" stroke-width="1.5"/><line x1="6.5" y1="2.5" x2="6.5" y2="5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="13.5" y1="2.5" x2="13.5" y2="5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><input type="date" tabindex="-1" aria-label="Pick date" value="${o.value||''}" onclick="try{this.showPicker()}catch(e){}" onchange="datePicked(this)"></span></div>`;
+}
+function dateMask(el){
+  const parts=el.value.replace(/[^\d/]/g,'').split('/').slice(0,3);
+  let d=parts[0]||'',mo=parts[1]||'',y=parts[2]||'';const had=parts.length;
+  if(d.length>2){mo=d.slice(2)+mo;d=d.slice(0,2);}
+  if(mo.length>2){y=mo.slice(2)+y;mo=mo.slice(0,2);}
+  y=y.slice(0,4);
+  let out=d;if(had>1||mo)out+='/'+mo;if(had>2||y)out+='/'+y;
+  if(el.value!==out)el.value=out;el.classList.remove('bad');
+}
+function dateFieldCommit(el){
+  const v=el.value.trim();let iso='';
+  if(v){iso=parseDMY(v);if(!iso){el.classList.add('bad');showNotify('USE DD/MM/YYYY');return;}}
+  el.classList.remove('bad');if(iso)el.value=isoToDMY(iso);
+  const k=el.dataset.kind;
+  if(k==='ai'){const t=document.getElementById(el.dataset.target);if(t)t.value=iso;return;}
+  const o=k==='goal'?goals.find(g=>g.id===el.dataset.id):findNode(el.dataset.id,goals);
+  if(!o||(o[el.dataset.field]||'')===iso)return;
+  o[el.dataset.field]=iso;saveAll();scheduleDateRender();
+}
+function datePicked(nat){const txt=nat.closest('.datef').querySelector('.datef-txt');txt.value=isoToDMY(nat.value);dateFieldCommit(txt);}
+let _dateRenderT=null,_dateRenderPending=false;
+function scheduleDateRender(){
+  clearTimeout(_dateRenderT);
+  _dateRenderT=setTimeout(()=>{const a=document.activeElement;if(a&&a.classList&&a.classList.contains('datef-txt')){_dateRenderPending=true;return;}_dateRenderPending=false;renderGoalContent();},350);
+}
+document.addEventListener('focusout',e=>{if(_dateRenderPending&&e.target.classList&&e.target.classList.contains('datef-txt')){_dateRenderPending=false;scheduleDateRender();}});
 function saveNodeText(nid,field,val){const n=findNode(nid,goals);if(n){n[field]=val;saveAll();}}
 
 function addStep(pid){const inp=document.getElementById('ai-'+pid);if(!inp)return;const name=inp.value.trim();if(!name)return;const par=findNode(pid,goals);if(par)par.children.push({id:uid(),name,done:false,collapsed:false,inFocus:false,startDate:'',deadline:'',children:[]});inp.value='';const el=document.getElementById('ail-'+pid);if(el)el.classList.remove('open');saveAll();renderGoalContent();}
@@ -1389,8 +1432,8 @@ function renderPNode(node,depth){
     <div class="node-tags${tOpen?' open':''}">${tOpen?nodeTagPicker(node):''}</div>
     <div class="node-dates${dOpen?' open':''}" id="nd-${node.id}">
       <div class="date-row">
-        <div><div class="date-lbl">Start</div><input class="inp-date" type="date" value="${node.startDate||''}" onchange="saveNodeDate('${node.id}','startDate',this.value)"></div>
-        <div><div class="date-lbl" style="${isOverdue?'color:#ff4444':''}">Deadline${isOverdue?' ⚠':''}</div><input class="inp-date" type="date" value="${node.deadline||''}" style="${isOverdue?'border-color:#ff444488;color:#ff4444':''}" onchange="saveNodeDate('${node.id}','deadline',this.value)"></div>
+        <div><div class="date-lbl">Start</div>${dateFieldHTML({kind:'node',id:node.id,field:'startDate',value:node.startDate})}</div>
+        <div><div class="date-lbl" style="${isOverdue?'color:#ff4444':''}">Deadline${isOverdue?' ⚠':''}</div>${dateFieldHTML({kind:'node',id:node.id,field:'deadline',value:node.deadline,overdue:isOverdue})}</div>
       </div>
     </div>
     <div class="add-inline" id="ail-${node.id}">
@@ -1593,9 +1636,9 @@ function renderGoalContent(){
       <button class="date-toggle${gdOpen?' open':''}${gdHas?' has':''}" onclick="toggleGoalDates('${g.id}')"><i class="timeline-icon">◷</i> <span style="margin-left:2px">DATES</span></button>
     </div>
     <div class="goal-dates-body${gdOpen?' open':''}" id="gd-${g.id}">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-top:10px">
-        <div><div class="date-lbl">Start date</div><input class="inp-date" type="date" value="${g.startDate||''}" onchange="saveGoalDate('${g.id}','startDate',this.value)"></div>
-        <div><div class="date-lbl" style="${isOverdue?'color:#ff4444':''}">Deadline${isOverdue?' ⚠':''}</div><input class="inp-date" type="date" value="${g.deadline||''}" style="${isOverdue?'border-color:#ff444488;color:#ff4444':''}" onchange="saveGoalDate('${g.id}','deadline',this.value)"></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;padding-top:10px">
+        <div><div class="date-lbl">Start date</div>${dateFieldHTML({kind:'goal',id:g.id,field:'startDate',value:g.startDate})}</div>
+        <div><div class="date-lbl" style="${isOverdue?'color:#ff4444':''}">Deadline${isOverdue?' ⚠':''}</div>${dateFieldHTML({kind:'goal',id:g.id,field:'deadline',value:g.deadline,overdue:isOverdue})}</div>
       </div>
     </div>
   </div>`;
