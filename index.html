@@ -135,6 +135,9 @@ textarea.inp{resize:none;line-height:1.6}
 .gtab .inline-edit{width:auto;min-width:110px;max-width:240px;text-align:center;border-radius:var(--radius-sm)}
 .goal-tag-panel{margin:8px 0 0;padding:8px 10px;background:var(--bg1);border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:0 1px 6px var(--shadow)}
 .goal-tag-panel-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.goal-tag-summary{font-size:10px;font-weight:600;color:var(--text3);text-transform:none;letter-spacing:0;display:none}
+.goal-tag-panel.collapsed .goal-tag-summary{display:inline}
+.goal-tag-panel.collapsed .goal-tag-body{display:none}
 .goal-tag-panel-title{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em}
 .goal-tools{display:flex;gap:6px;align-items:center;margin-top:7px}
 .goal-tools .inp{width:auto;min-width:0;flex:1;padding:6px 8px;font-size:10px}
@@ -409,7 +412,8 @@ textarea.inp{resize:none;line-height:1.6}
     <div class="page-title">Goals</div>
     <div class="xp-bar-wrap" id="xp-bar-goals" style="margin:0 -20px;padding-left:20px;padding-right:20px"></div>
     <div class="goal-tag-panel">
-      <div class="goal-tag-panel-head"><div class="goal-tag-panel-title">Tags</div><button class="btn btn-ghost btn-xs" onclick="toggleGoalTagManager()">+ Add tag</button></div>
+      <div class="goal-tag-panel-head"><div class="goal-tag-panel-title" onclick="toggleTagsCard()" style="cursor:pointer;display:flex;align-items:center;gap:8px"><button class="gantt-toggle" id="tags-toggle" aria-label="Collapse or expand tags" aria-expanded="true">▾</button>Tags<span class="goal-tag-summary" id="goal-tag-summary"></span></div><button class="btn btn-ghost btn-xs" onclick="toggleGoalTagManager()">+ Add tag</button></div>
+      <div class="goal-tag-body">
       <div class="goal-tag-list" id="goal-active-tag-list"></div>
       <div class="goal-tools">
         <select class="inp" id="goal-tag-filter" onchange="setGoalTagFilter(this.value)" aria-label="Filter goals by tag"></select>
@@ -421,6 +425,7 @@ textarea.inp{resize:none;line-height:1.6}
         <div class="row"><input class="inp" id="new-goal-tag" placeholder="New tag name..." maxlength="24" onkeydown="if(event.key==='Enter')addGoalTag()"><select class="inp" id="new-goal-tag-group" aria-label="Group for new tag" style="width:auto;max-width:38%;flex:none"></select><button class="btn btn-purple btn-xs" onclick="addGoalTag()">Add</button></div>
         <div class="row" style="margin-top:6px"><input class="inp" id="new-tag-group" placeholder="New group name (e.g. Area, Priority)..." maxlength="24" onkeydown="if(event.key==='Enter')addTagGroup()"><button class="btn btn-ghost btn-xs" onclick="addTagGroup()">+ Group</button></div>
         <div class="goal-tag-list" id="goal-tag-list"></div>
+      </div>
       </div>
     </div>
     <div class="goal-tabs-bar" id="goal-tabs"></div>
@@ -1227,7 +1232,14 @@ function selectGoal(i){activeGoalIdx=i;renderGoalTabs();renderGoalContent();}
 function deleteGoal(i){if(!confirm('Delete this goal?'))return;goals.splice(i,1);if(activeGoalIdx>=goals.length)activeGoalIdx=Math.max(0,goals.length-1);saveAll();renderGoalTabs();renderGoalContent();}
 function setGoalSort(v){goalSort=v;saveAll();renderGoalTabs();}
 function setGoalTagFilter(v){goalTagFilter=v;saveAll();renderGoalTabs();renderGoalContent();}
-function toggleGoalTagManager(){const el=document.getElementById('goal-tag-manager');el?.classList.toggle('open');renderGoalTagControls();if(el?.classList.contains('open'))setTimeout(()=>document.getElementById('new-goal-tag')?.focus(),0);}
+let tagsCollapsed=!!LS('lt2_tags_collapsed');
+function applyTagsCollapsed(){
+  const panel=document.querySelector('.goal-tag-panel');if(!panel)return;
+  panel.classList.toggle('collapsed',tagsCollapsed);
+  const b=document.getElementById('tags-toggle');if(b){b.textContent=tagsCollapsed?'▸':'▾';b.setAttribute('aria-expanded',String(!tagsCollapsed));}
+}
+function toggleTagsCard(){tagsCollapsed=!tagsCollapsed;LSS('lt2_tags_collapsed',tagsCollapsed);applyTagsCollapsed();}
+function toggleGoalTagManager(){if(tagsCollapsed){tagsCollapsed=false;LSS('lt2_tags_collapsed',false);applyTagsCollapsed();}const el=document.getElementById('goal-tag-manager');el?.classList.toggle('open');renderGoalTagControls();if(el?.classList.contains('open'))setTimeout(()=>document.getElementById('new-goal-tag')?.focus(),0);}
 function addTagGroup(){
   const inp=document.getElementById('new-tag-group'),name=(inp?.value||'').trim();if(!name)return;
   if(goalTagGroups.some(g=>g.name.toLowerCase()===name.toLowerCase())){showNotify('GROUP ALREADY EXISTS');return;}
@@ -1257,6 +1269,8 @@ function renderGoalTagControls(){
   if(inlineEditing)return;
   const filter=document.getElementById('goal-tag-filter'),sort=document.getElementById('goal-sort-select'),list=document.getElementById('goal-tag-list'),activeList=document.getElementById('goal-active-tag-list'),gsel=document.getElementById('new-goal-tag-group');
   const views=tagGroupsView();
+  const sum=document.getElementById('goal-tag-summary');
+  if(sum){const f=goalTags.find(t=>t.id===goalTagFilter);sum.textContent=goalTags.length?(goalTags.length+' tag'+(goalTags.length===1?'':'s')+(f?' · filter: '+f.name:'')):'none yet';}
   if(filter){
     const opt=t=>`<option value="${t.id}">${esc(t.name)}</option>`;
     filter.innerHTML='<option value="all">All tags</option>'+views.map(v=>v.group?(v.tags.length?`<optgroup label="${esc(v.group.name)}">${v.tags.map(opt).join('')}</optgroup>`:''):v.tags.map(opt).join('')).join('');
@@ -2219,6 +2233,7 @@ function wheelRenderPins(){
 }
 
 fwRenderList();
+applyTagsCollapsed();
 switchTab('goals');
 
 
