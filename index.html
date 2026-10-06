@@ -1573,6 +1573,16 @@ function renderGoalContent(){
   // Gantt chart (only if any dates set)
   let h=renderGantt(g);
 
+  // Daily Focus (universal across goals)
+  h+=`<div class="focus-card"><div class="card-label" style="margin-bottom:8px;color:var(--accent)">Daily Focus <span style="font-weight:400;color:var(--text3)">— ACROSS ALL GOALS · TAP DF ON ANY STEP</span></div>`;
+  if(focusNodes.length){focusNodes.forEach(({n,gi})=>{const isSel=activeStepId===n.id;const sp=timers[n.id]?timers[n.id].done:0;const otherGoal=gi!==activeGoalIdx?goals[gi]:null;h+=`<div class="focus-item${isSel?' act':''}" onclick="selectFocusItem('${n.id}')">
+    <div style="width:6px;height:6px;border-radius:1px;background:${isSel?'var(--accent)':'var(--text4)'};flex-shrink:0"></div>
+    <span onclick="event.stopPropagation();tapItem('step','${n.id}',event,()=>selectFocusItem('${n.id}'))" title="Double-click to rename" style="flex:1;min-width:0;overflow-wrap:break-word;font-size:15px;color:${isSel?'var(--accent-d)':'var(--text2)'};font-weight:${isSel?'600':'400'}">${esc(n.name)}${(n.tagIds&&n.tagIds.length)?`<span class="p-tags" style="padding:3px 0 0">${nodeTagChips(n)}</span>`:''}${otherGoal?`<span style="display:block;font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-top:1px">${esc(otherGoal.name)}</span>`:''}</span>
+    ${sp>0?`<span style="font-size:10px;color:var(--accent-d);font-weight:600">${sp} sp</span>`:''}
+    <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();toggleFocus('${n.id}')">✕</button>
+  </div>`;});}else{h+=`<div style="font-size:12px;color:var(--text3);padding:6px 0;font-family:var(--mono);text-transform:uppercase;letter-spacing:.1em">No items — tap DF on any step</div>`;}
+  h+=`</div>`;
+
   // Goal-level dates card — collapsible
   const isOverdue=g.deadline&&g.deadline<TODAY&&!g.done;
   const gdOpen=goalDateState[g.id]||false;
@@ -1598,15 +1608,6 @@ function renderGoalContent(){
       ${g.obstacle?`<div style="background:var(--bg1);border:1px solid var(--border);border-left:3px solid var(--peach);border-radius:var(--radius-sm);padding:12px 14px"><div style="font-size:11px;font-weight:600;color:var(--peach);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">Obstacle</div><div title="Double-click to edit" onclick="tapItem('obstacle','${g.id}',event,()=>{})" style="font-size:13px;color:var(--text2);line-height:1.5;font-weight:500;cursor:text;overflow-wrap:break-word">${esc(g.obstacle)}</div></div>`:''}
     </div>`;
   }
-
-  h+=`<div class="focus-card"><div class="card-label" style="margin-bottom:8px;color:var(--accent)">Daily Focus <span style="font-weight:400;color:var(--text3)">— ACROSS ALL GOALS · TAP DF ON ANY STEP</span></div>`;
-  if(focusNodes.length){focusNodes.forEach(({n,gi})=>{const isSel=activeStepId===n.id;const sp=timers[n.id]?timers[n.id].done:0;const otherGoal=gi!==activeGoalIdx?goals[gi]:null;h+=`<div class="focus-item${isSel?' act':''}" onclick="selectFocusItem('${n.id}')">
-    <div style="width:6px;height:6px;border-radius:1px;background:${isSel?'var(--accent)':'var(--text4)'};flex-shrink:0"></div>
-    <span onclick="event.stopPropagation();tapItem('step','${n.id}',event,()=>selectFocusItem('${n.id}'))" title="Double-click to rename" style="flex:1;min-width:0;overflow-wrap:break-word;font-size:15px;color:${isSel?'var(--accent-d)':'var(--text2)'};font-weight:${isSel?'600':'400'}">${esc(n.name)}${(n.tagIds&&n.tagIds.length)?`<span class="p-tags" style="padding:3px 0 0">${nodeTagChips(n)}</span>`:''}${otherGoal?`<span style="display:block;font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-top:1px">${esc(otherGoal.name)}</span>`:''}</span>
-    ${sp>0?`<span style="font-size:10px;color:var(--accent-d);font-weight:600">${sp} sp</span>`:''}
-    <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();toggleFocus('${n.id}')">✕</button>
-  </div>`;});}else{h+=`<div style="font-size:12px;color:var(--text3);padding:6px 0;font-family:var(--mono);text-transform:uppercase;letter-spacing:.1em">No items — tap DF on any step</div>`;}
-  h+=`</div>`;
 
   h+=`<div class="card"><div class="card-label">Pipeline</div>
     ${g.children.length?g.children.map(n=>renderPNode(n,0)).join(''):`<div style="font-size:12px;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em">No steps yet</div>`}
