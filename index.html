@@ -282,11 +282,19 @@ textarea.inp{resize:none;line-height:1.6}
 .stat-card{background:var(--bg1);border:1px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:0 2px 12px var(--shadow)}
 .stat-val{font-size:38px;font-weight:700;line-height:1;color:var(--text)}
 .stat-sub{font-size:11px;color:var(--text3);margin-top:6px;text-transform:uppercase;letter-spacing:.08em;font-weight:600}
-.hab-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.hab-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:12px 0;border-bottom:1px solid var(--border)}
 .hab-row:last-child{border-bottom:none}
 .h-ck{width:28px;height:28px;border-radius:50%;border:2px solid var(--border2);background:var(--bg2);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
-.h-name{flex:1;font-size:15px;font-weight:500;color:var(--text)}
+.h-name{flex:1 1 110px;min-width:0;overflow-wrap:break-word;font-size:15px;font-weight:500;color:var(--text)}
 .h-name.done{color:var(--text3);text-decoration:line-through}
+.h-goal{all:unset;box-sizing:border-box;font-size:11px;font-weight:600;padding:3px 10px;border-radius:var(--radius-pill);border:1px dashed var(--border2);color:var(--text3);cursor:pointer;white-space:nowrap}
+.h-goal:hover{border-color:var(--accent);color:var(--accent)}
+.h-goal.set{border-style:solid;border-color:var(--accent-mid);color:var(--accent-d);background:var(--accent-dim)}
+.h-goal.done{background:var(--accent);border-color:var(--accent);color:white}
+.h-goalbar{flex:1 1 100%;height:5px;border-radius:3px;background:var(--bg3);overflow:hidden}
+.h-goalbar div{height:100%;background:var(--accent);border-radius:3px;transition:width .4s}
+.h-goalbar div.done{background:#5aaf78}
+.inline-edit-num{flex:none;width:72px;min-width:0;text-align:center}
 .h-streak{font-size:11px;font-weight:600;padding:3px 10px;border-radius:var(--radius-pill);background:var(--bg2);color:var(--text2)}
 .hm-cell{width:100%;aspect-ratio:1;border-radius:3px;min-height:11px;transition:transform .12s;cursor:pointer}
 .hm-cell:hover{transform:scale(1.25);z-index:1;position:relative}
@@ -1186,12 +1194,13 @@ function inlineTarget(kind,id){
   if(kind==='step'){const o=findNode(id,goals);return mk(o,()=>o.name,v=>{o.name=v;},200);}
   if(kind==='habit'){const o=habits.find(h=>h.id===id);return mk(o,()=>o.name,v=>{o.name=v;},200);}
   if(kind==='tag'){const o=goalTags.find(t=>t.id===id);return mk(o,()=>o.name,v=>{o.name=v;},24);}
+  if(kind==='habitGoal'){const o=habits.find(h=>h.id===id);const t=mk(o,()=>o.streakGoal?String(o.streakGoal):'',v=>{if(v)o.streakGoal=parseInt(v,10);else delete o.streakGoal;},4,true);if(t)t.clean=x=>{const n=parseInt(x.replace(/\D/g,''),10);return n>0?String(Math.min(n,3650)):'';};return t;}
   if(kind==='tagGroup'){const o=goalTagGroups.find(t=>t.id===id);return mk(o,()=>o.name,v=>{o.name=v;},24);}
   if(kind==='wish'||kind==='obstacle'){const o=goals.find(g=>g.id===id);return mk(o,()=>o[kind]||'',v=>{o[kind]=v;},500,true);}
   return null;
 }
 function refreshAfterInlineEdit(kind){
-  if(kind==='habit'){renderHabits();return;}
+  if(kind==='habit'||kind==='habitGoal'){renderHabits();return;}
   if(kind==='tag'||kind==='tagGroup')renderGoalTagControls();
   renderGoalTabs();renderGoalContent();
 }
@@ -1202,10 +1211,11 @@ function startInlineEdit(kind,id,el){
   const host=kind==='goal'?el.closest('.gtab'):el;
   const row=host.closest('.p-row')||host.closest('.hab-row');
   inlineEditing=true;
-  if(row&&kind!=='goal'){row.classList.add('editing');inp.classList.add('inline-edit-full');}
+  if(kind==='habitGoal'){inp.classList.add('inline-edit-num');inp.setAttribute('inputmode','numeric');}
+  else if(row&&kind!=='goal'){row.classList.add('editing');inp.classList.add('inline-edit-full');}
   if(kind==='goal'){host.innerHTML='';host.appendChild(inp);}else{host.replaceWith(inp);}
   let finished=false;
-  const finish=save=>{if(finished)return;finished=true;inlineEditing=false;const v=inp.textContent.trim().slice(0,t.max);if(save&&(v||t.empty)&&v!==t.get()){t.set(v);saveAll();}refreshAfterInlineEdit(kind);};
+  const finish=save=>{if(finished)return;finished=true;inlineEditing=false;const raw=inp.textContent.trim();const v=t.clean?t.clean(raw):raw.slice(0,t.max);if(save&&(v||t.empty)&&v!==t.get()){t.set(v);saveAll();}refreshAfterInlineEdit(kind);};
   inp.addEventListener('paste',ev=>{ev.preventDefault();document.execCommand('insertText',false,(ev.clipboardData||window.clipboardData).getData('text/plain'));});
   inp.addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();finish(true);}else if(ev.key==='Escape'){ev.preventDefault();finish(false);}});
   inp.addEventListener('blur',()=>finish(true));
@@ -1723,7 +1733,7 @@ function toggleHabit(i){
   if(habitViewDate===TODAY)habits[i].done=!cur;
   LSS('lt2_hlog',log);
   saveAll();
-  if(!cur&&habitViewDate===TODAY)awardXP(5,'HABIT');
+  if(!cur&&habitViewDate===TODAY){awardXP(5,'HABIT');const g=habits[i].streakGoal;if(g&&getHabitStreak(habits[i].id)===g)showNotify('STREAK GOAL REACHED · '+g+(g===1?' DAY':' DAYS'),3000);}
   renderHabits();renderHeatmap();renderCompound();renderXPBar();
 }
 function removeHabit(i){habits.splice(i,1);saveAll();renderHabits();renderHeatmap();renderCompound();}
@@ -1745,13 +1755,15 @@ function renderHabits(){
   if(nextBtn)nextBtn.style.opacity=isToday?'0.2':'1';
   const list=document.getElementById('habit-list');
   if(!habits.length){list.innerHTML=`<div class="empty-state" style="padding:20px 0">No habits yet</div>`;return;}
-  list.innerHTML=habits.map((h,i)=>{const isDone=!!(dayLog[h.id]);return`<div class="hab-row">
+  list.innerHTML=habits.map((h,i)=>{const isDone=!!(dayLog[h.id]);const st=getHabitStreak(h.id),goal=h.streakGoal||0,reached=goal>0&&st>=goal;const pct=goal?Math.min(100,Math.round(st/goal*100)):0;return`<div class="hab-row">
     <div class="h-ck" onclick="toggleHabit(${i})" style="${isDone?'background:var(--accent);border-color:var(--accent)':'border-color:var(--border2)'}">
       ${isDone?`<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1.5 6l3.5 3.5 6-6" stroke="white" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/></svg>`:''}
     </div>
     <span class="h-name${isDone?' done':''}" title="Double-click to rename" onclick="tapItem('habit','${h.id}',event,()=>{})">${esc(h.name)}</span>
-    <span class="h-streak">${getHabitStreak(h.id)}D</span>
+    <span class="h-streak">${st}D</span>
+    <button class="h-goal${goal?' set':''}${reached?' done':''}" onclick="startInlineEdit('habitGoal','${h.id}',this)" title="Streak goal in days — click to ${goal?'change or clear':'set'}">${goal?(reached?'✓ ':'')+'goal '+goal+'D':'+ goal'}</button>
     <button class="btn btn-danger btn-xs" onclick="removeHabit(${i})">×</button>
+    ${goal?`<div class="h-goalbar" title="${st} of ${goal} days"><div class="${reached?'done':''}" style="width:${pct}%"></div></div>`:''}
   </div>`;}).join('');
 }
 
