@@ -943,12 +943,26 @@ function buildGanttSVG(goal,svgW){
   return{svg,svgW,SVG_H};
 }
 
+let _ganttResizeT=null,_ganttLastW=0;
+window.addEventListener('resize',()=>{
+  clearTimeout(_ganttResizeT);
+  _ganttResizeT=setTimeout(()=>{
+    const gc=document.getElementById('goal-content');if(!gc||!document.getElementById('tab-goals').classList.contains('active')||!document.querySelector('.gantt-wrap'))return;
+    const w=ganttFitWidth(gc,2);if(w===_ganttLastW)return;_ganttLastW=w;renderGoalContent();
+  },200);
+});
 function toggleGantt(){
   ganttCollapsed=!ganttCollapsed;LSS('lt2_gantt_collapsed',ganttCollapsed);
   document.querySelectorAll('.gantt-wrap').forEach(w=>{w.classList.toggle('collapsed',ganttCollapsed);const b=w.querySelector('.gantt-toggle');if(b){b.textContent=ganttCollapsed?'▸':'▾';b.setAttribute('aria-expanded',String(!ganttCollapsed));}});
 }
+function ganttFitWidth(el,extra){
+  if(!el)return 560;
+  const cs=getComputedStyle(el);
+  const w=el.clientWidth-(parseFloat(cs.paddingLeft)||0)-(parseFloat(cs.paddingRight)||0)-(extra||0);
+  return w>0?Math.max(520,Math.floor(w)):560;
+}
 function renderGantt(goal){
-  const res=buildGanttSVG(goal,560);
+  const res=buildGanttSVG(goal,ganttFitWidth(document.getElementById('goal-content'),2));
   if(!res)return'';
   return`<div class="gantt-wrap${ganttCollapsed?' collapsed':''}">
     <div class="gantt-header">
@@ -969,11 +983,10 @@ function openGanttModal(gid){
   const body=document.getElementById('gantt-modal-body');
   const title=document.getElementById('gantt-modal-title');
   title.textContent=g.name.toUpperCase();
-  // Use wider SVG for modal — 700px
-  const res=buildGanttSVG(g,700);
+  modal.classList.add('open');
+  const res=buildGanttSVG(g,ganttFitWidth(body,0));
   if(res){body.innerHTML=`<div style="overflow-x:auto;scrollbar-width:thin;scrollbar-color:var(--bg3) transparent">${res.svg}</div>`;}
   else{body.innerHTML=`<div class="empty-state">No dates set on any steps yet</div>`;}
-  modal.classList.add('open');
 }
 function closeGanttModal(){
   document.getElementById('gantt-modal').classList.remove('open');
