@@ -18,8 +18,9 @@
 :root{
   /* Sage-green / cream palette — from reference */
   --bg:#f0ede6;--bg1:#faf8f3;--bg2:#e8e4da;--bg3:#ddd9cf;--bg4:#d0ccbf;
-  --text:#2c2c2c;--text2:#6b6b6b;--text3:#a0a09a;--text4:#c8c5bd;
-  --accent:#6b9e7a;--accent-d:#4e7d5c;--accent-dim:rgba(107,158,122,0.12);--accent-mid:rgba(107,158,122,0.35);
+  --text:#2c2c2c;--text2:#52524d;--text3:#64645d;--text4:#c8c5bd;
+  --accent:#4f7f5b;--accent-d:#3b6548;--accent-dim:rgba(107,158,122,0.12);--accent-mid:rgba(107,158,122,0.35);
+  --peach-text:#a8452f;--lav-text:#6a52c4;--amber-text:#9a5a08;--sky-text:#2f6c8c;--sand-text:#82540e;
   --peach:#e8a090;--peach-dim:rgba(232,160,144,0.15);--peach-mid:rgba(232,160,144,0.4);
   --sky:#a8c4d4;--sky-dim:rgba(168,196,212,0.18);
   --lavender:#b8a8d8;--lav-dim:rgba(184,168,216,0.15);
@@ -44,7 +45,7 @@ input,button,textarea,select{font-family:var(--font)}
 .nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:760px;height:calc(var(--nav-h) + var(--safe-bottom));background:rgba(250,248,243,0.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--border);display:flex;align-items:flex-start;padding-top:10px;z-index:100;box-shadow:0 -4px 20px var(--shadow)}
 .nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:none;cursor:pointer;color:var(--text3);font-size:9px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:4px 0;transition:color .2s}
 .nav-btn svg{width:22px;height:22px;transition:transform .2s}
-.nav-btn.active{color:var(--accent)}
+.nav-btn.active{color:var(--accent-d)}
 .nav-btn.active svg{transform:scale(1.1)}
 
 /* HEADER */
@@ -68,7 +69,7 @@ textarea.inp{resize:none;line-height:1.6}
 .datef-txt.bad{border-color:#e05555;color:#e05555}
 .datef-txt.overdue{border-color:#ff444488;color:#ff4444}
 .datef-pick{position:relative;flex:none;width:34px;height:31px;border-radius:var(--radius-sm);background:var(--bg2);color:var(--text3);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
-.datef-pick:hover{color:var(--accent)}
+.datef-pick:hover{color:var(--accent-d)}
 .datef-pick input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0}
 @media(max-width:480px){.datef-txt{font-size:16px}}
 .inp-date:focus{border-color:var(--accent);color:var(--text)}
@@ -79,14 +80,14 @@ textarea.inp{resize:none;line-height:1.6}
 /* BUTTONS */
 .btn{background:var(--bg2);border:1.5px solid var(--border2);border-radius:var(--radius-sm);color:var(--text2);font-family:var(--font);font-size:13px;font-weight:600;padding:10px 18px;cursor:pointer;transition:all .15s;white-space:nowrap}
 .btn:active{transform:scale(.97)}
-.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn:hover{border-color:var(--accent);color:var(--accent-d)}
 .btn-purple{background:var(--accent);border-color:var(--accent);color:white;box-shadow:0 3px 10px var(--accent-mid)}
 .btn-purple:hover{background:var(--accent-d);border-color:var(--accent-d);color:white}
-.btn-green{background:transparent;border-color:var(--accent);color:var(--accent);font-weight:600}
-.btn-green:hover{background:var(--accent-dim);color:var(--accent)}
+.btn-green{background:transparent;border-color:var(--accent);color:var(--accent-d);font-weight:600}
+.btn-green:hover{background:var(--accent-dim);color:var(--accent-d)}
 .btn-ghost{background:none;border-color:transparent;color:var(--text3);padding-left:8px;padding-right:8px;box-shadow:none}
 .btn-ghost:hover{color:var(--text);border-color:transparent}
-.btn-danger{background:none;border-color:transparent;color:var(--peach);box-shadow:none}
+.btn-danger{background:none;border-color:transparent;color:var(--peach-text);box-shadow:none}
 .btn-danger:hover{color:#c0503a;border-color:transparent}
 .btn-xs{padding:7px 12px;font-size:12px;border-radius:9px;min-height:34px}
 .sec{padding:14px 20px 0}
@@ -103,22 +104,22 @@ textarea.inp{resize:none;line-height:1.6}
 .xp-fill{height:100%;background:linear-gradient(90deg,var(--accent),#8ec49a);border-radius:var(--radius-pill);transition:width .5s cubic-bezier(.4,0,.2,1)}
 .xp-nums{font-size:10px;color:var(--text3);flex-shrink:0;font-family:var(--mono)}
 .xp-mult{font-size:10px;font-weight:700;font-family:var(--mono);padding:3px 8px;border-radius:var(--radius-pill);flex-shrink:0}
-.xp-mult.x1{color:var(--text3);background:var(--bg3)}
-.xp-mult.x15{color:#c08030;background:var(--sand-dim);border:1px solid var(--sand)}
-.xp-mult.x2{color:#b06030;background:rgba(232,160,100,0.15);border:1px solid rgba(232,160,100,0.3)}
-.xp-mult.x3{color:white;background:var(--peach);border:none;animation:pulse-peach 1.2s ease-in-out infinite}
+.xp-mult.x1{color:var(--text2);background:var(--bg3)}
+.xp-mult.x15{color:var(--sand-text);background:var(--sand-dim);border:1px solid var(--sand)}
+.xp-mult.x2{color:#8f4a1f;background:rgba(232,160,100,0.15);border:1px solid rgba(232,160,100,0.3)}
+.xp-mult.x3{color:#4a2418;background:var(--peach);border:none;animation:pulse-peach 1.2s ease-in-out infinite}
 @keyframes pulse-peach{0%,100%{box-shadow:0 0 0 0 var(--peach-mid)}50%{box-shadow:0 0 0 6px transparent}}
-.xp-toast{position:fixed;top:calc(var(--safe-top) + 60px);right:16px;background:var(--bg1);border:1.5px solid var(--accent-mid);border-radius:var(--radius);padding:9px 16px;font-size:12px;font-weight:600;color:var(--accent);z-index:998;transform:translateX(120%);transition:transform .3s cubic-bezier(.34,1.56,.64,1);pointer-events:none;box-shadow:0 4px 16px var(--shadow)}
+.xp-toast{position:fixed;top:calc(var(--safe-top) + 60px);right:16px;background:var(--bg1);border:1.5px solid var(--accent-mid);border-radius:var(--radius);padding:9px 16px;font-size:12px;font-weight:600;color:var(--accent-d);z-index:998;transform:translateX(120%);transition:transform .3s cubic-bezier(.34,1.56,.64,1);pointer-events:none;box-shadow:0 4px 16px var(--shadow)}
 .xp-toast.show{transform:translateX(0)}
 .chain-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:var(--radius-pill)}
-.chain-badge.flow{background:var(--sky-dim);color:#5090b0;border:1px solid rgba(168,196,212,0.5)}
-.chain-badge.deep{background:var(--lav-dim);color:#8070b0;border:1px solid rgba(184,168,216,0.4)}
+.chain-badge.flow{background:var(--sky-dim);color:var(--sky-text);border:1px solid rgba(168,196,212,0.5)}
+.chain-badge.deep{background:var(--lav-dim);color:#5f509e;border:1px solid rgba(184,168,216,0.4)}
 .chain-badge.ultra{background:var(--peach-dim);color:#b04030;border:1px solid var(--peach-mid);animation:pulse-peach 1s ease-in-out infinite}
 .cal-badge-flow{background:var(--sky-dim)!important;border-color:rgba(168,196,212,0.6)!important}
 .cal-badge-deep{background:var(--lav-dim)!important;border-color:rgba(184,168,216,0.5)!important}
 .cal-badge-ultra{background:var(--peach-dim)!important;border-color:var(--peach-mid)!important}
-.cal-badge-flow .cal-day{color:#5090b0!important}
-.cal-badge-deep .cal-day{color:#8070b0!important}
+.cal-badge-flow .cal-day{color:var(--sky-text)!important}
+.cal-badge-deep .cal-day{color:#5f509e!important}
 .cal-badge-ultra .cal-day{color:#b04030!important}
 
 /* GOAL TABS */
@@ -126,11 +127,11 @@ textarea.inp{resize:none;line-height:1.6}
 .goal-tabs-bar::-webkit-scrollbar{display:none}
 .gtab{position:relative;flex-shrink:0;font-size:12px;font-weight:600;padding:7px 16px 5px;border-radius:var(--radius-pill);border:1.5px solid var(--border2);background:var(--bg1);color:var(--text2);cursor:pointer;transition:all .15s;box-shadow:0 1px 4px var(--shadow);display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0}
 .gtab.on{background:var(--accent);border-color:var(--accent);color:white;box-shadow:0 3px 10px var(--accent-mid)}
-.gtab:hover:not(.on){border-color:var(--accent);color:var(--accent)}
+.gtab:hover:not(.on){border-color:var(--accent);color:var(--accent-d)}
 .gtab-bar{height:3px;border-radius:2px;width:100%;min-width:40px;background:rgba(0,0,0,0.08);overflow:hidden;transition:width .3s}
 .gtab.on .gtab-bar{background:rgba(255,255,255,0.25)}
 .gtab-fill{height:100%;border-radius:2px;transition:width .4s cubic-bezier(.4,0,.2,1)}
-.gtab-delete{position:absolute;top:-10px;right:-7px;width:22px;height:22px;border-radius:50%;background:var(--peach);border:2px solid var(--bg2);color:white;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;z-index:2;box-shadow:0 2px 5px var(--shadow)}
+.gtab-delete{position:absolute;top:-10px;right:-7px;width:22px;height:22px;border-radius:50%;background:var(--peach);border:2px solid var(--bg2);color:#4a2418;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;z-index:2;box-shadow:0 2px 5px var(--shadow)}
 .inline-edit{flex:1;font:inherit;color:var(--text);background:var(--bg1);border:1.5px solid var(--accent);border-radius:var(--radius-sm);padding:3px 8px;outline:none;min-width:0;width:100%;resize:none;overflow:hidden;white-space:pre-wrap;overflow-wrap:break-word;line-height:1.3}
 .gtab .inline-edit{width:auto;min-width:110px;max-width:240px;text-align:center;border-radius:var(--radius-sm)}
 .goal-tag-panel{margin:8px 0 0;padding:8px 10px;background:var(--bg1);border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:0 1px 6px var(--shadow)}
@@ -138,21 +139,21 @@ textarea.inp{resize:none;line-height:1.6}
 .goal-tag-summary{font-size:10px;font-weight:600;color:var(--text3);text-transform:none;letter-spacing:0;display:none}
 .goal-tag-panel.collapsed .goal-tag-summary{display:inline}
 .goal-tag-panel.collapsed .goal-tag-body{display:none}
-.goal-tag-panel-title{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em}
+.goal-tag-panel-title{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em}
 .goal-tools{display:flex;gap:6px;align-items:center;margin-top:7px}
 .goal-tools .inp{width:auto;min-width:0;flex:1;padding:6px 8px;font-size:10px}
 .goal-tag-manager{display:none;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
 .goal-tag-manager.open{display:block}
 .goal-tag-list{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
 .goal-tag{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--tag-color,var(--border2));background:color-mix(in srgb,var(--tag-color,var(--accent)) 12%,var(--bg1));color:var(--text2);border-radius:var(--radius-pill);padding:4px 7px;font-size:10px;font-weight:600;cursor:pointer}
-.goal-tag.on{background:var(--tag-color,var(--accent));color:white;border-color:var(--tag-color,var(--accent))}
+.goal-tag.on{background:var(--tag-color,var(--accent));color:#1f1f1f;border-color:var(--tag-color,var(--accent))}
 .goal-tag-dot{width:7px;height:7px;border-radius:50%;background:var(--tag-color,var(--accent));flex-shrink:0}
-.goal-tag.on .goal-tag-dot{background:white}
+.goal-tag.on .goal-tag-dot{background:#1f1f1f}
 .goal-tag-remove{all:unset;cursor:pointer;font-size:13px;line-height:1;opacity:.7;padding:0 1px}
 .goal-tag-empty{font-size:11px;color:var(--text3)}
 .tag-group{flex:1 1 100%;display:flex;flex-wrap:wrap;align-items:center;gap:5px}
 .tag-group-head{flex:1 1 100%;display:flex;align-items:center;gap:6px;margin-top:3px}
-.tag-group-label{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em}
+.tag-group-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em}
 .tag-group-label.editable{cursor:text}
 .tag-group-del{all:unset;cursor:pointer;font-size:12px;line-height:1;color:var(--text3);padding:0 3px}
 .goal-tag-move{position:relative;display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;font-size:11px;opacity:.7;cursor:pointer}
@@ -191,7 +192,7 @@ textarea.inp{resize:none;line-height:1.6}
 .gcal-link{cursor:pointer;border-radius:6px;transition:background .12s}
 .gcal-link:hover{background:var(--accent-dim)}
 .gantt-toggle{all:unset;cursor:pointer;width:26px;height:26px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;color:var(--text2);background:var(--bg2);border:1.5px solid var(--border2)}
-.gantt-toggle:hover{border-color:var(--accent);color:var(--accent)}
+.gantt-toggle:hover{border-color:var(--accent);color:var(--accent-d)}
 .gantt-wrap.collapsed .gantt-svg-wrap,.gantt-wrap.collapsed .gantt-extra{display:none!important}
 .gantt-wrap.collapsed .gantt-header{border-bottom:none;padding-bottom:12px}
 .gantt-svg-wrap{overflow-x:auto;scrollbar-width:none;padding:0 0 8px}
@@ -202,7 +203,7 @@ textarea.inp{resize:none;line-height:1.6}
 .gantt-modal-header{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-shrink:0}
 .gantt-modal-body{overflow:auto;padding:14px 8px 16px;flex:1}
 .gantt-expand-btn{display:inline-flex;align-items:center;gap:5px;cursor:pointer;background:var(--bg2);border:1.5px solid var(--border2);color:var(--text2);font-size:11px;font-weight:600;padding:5px 12px;border-radius:var(--radius-pill);transition:all .15s}
-.gantt-expand-btn:hover{border-color:var(--accent);color:var(--accent)}
+.gantt-expand-btn:hover{border-color:var(--accent);color:var(--accent-d)}
 
 /* PIPELINE */
 .p-node{position:relative;margin-bottom:3px}
@@ -227,7 +228,7 @@ textarea.inp{resize:none;line-height:1.6}
 .p-acts .btn-xs,.p-acts .date-toggle,.drag-handle{min-width:34px;min-height:34px;padding:6px 9px;display:inline-flex;align-items:center;justify-content:center}
 .p-acts .btn-xs{font-size:14px}
 .drag-handle{border:0;background:transparent;color:var(--text3);border-radius:9px;font-size:17px;font-weight:700;line-height:1;cursor:grab;touch-action:none;flex-shrink:0}
-.drag-handle:hover{color:var(--accent);background:var(--accent-dim)}
+.drag-handle:hover{color:var(--accent-d);background:var(--accent-dim)}
 .drag-handle:active{cursor:grabbing}
 .p-kids{padding-left:24px;border-left:2px solid var(--border);margin-left:16px;margin-top:2px}
 .p-sp-badge{font-size:11px;padding:2px 9px;border-radius:var(--radius-pill);background:var(--accent);color:white;flex-shrink:0;font-weight:600}
@@ -249,7 +250,7 @@ textarea.inp{resize:none;line-height:1.6}
 .date-toggle:hover{color:var(--text)}
 .date-toggle .timeline-icon{display:inline-block;font-family:var(--mono);font-style:normal;font-size:18px;line-height:1}
 .date-toggle.open{background:var(--accent-dim);color:var(--accent-d)}
-.date-toggle.has{color:var(--accent)}
+.date-toggle.has{color:var(--accent-d)}
 
 @media(max-width:480px){
   .p-row{gap:7px;padding:10px 8px}
@@ -268,7 +269,7 @@ textarea.inp{resize:none;line-height:1.6}
 .sprint-panel{background:var(--bg1);border:1px solid var(--border);border-radius:var(--radius);padding:18px 18px 16px;margin-bottom:12px;box-shadow:0 2px 12px var(--shadow)}
 .dur-row{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
 .dur-btn{font-size:12px;padding:6px 14px;border-radius:var(--radius-pill);border:1.5px solid var(--border2);background:var(--bg2);color:var(--text2);cursor:pointer;transition:all .15s;font-weight:600}
-.dur-btn:hover{border-color:var(--accent);color:var(--accent)}
+.dur-btn:hover{border-color:var(--accent);color:var(--accent-d)}
 .dur-btn.on{background:var(--accent);border-color:var(--accent);color:white;box-shadow:0 2px 8px var(--accent-mid)}
 .timer-row{display:flex;align-items:center;gap:20px;margin-bottom:16px}
 .t-circle{position:relative;width:80px;height:80px;flex-shrink:0}
@@ -295,7 +296,7 @@ textarea.inp{resize:none;line-height:1.6}
 .h-name{flex:1 1 110px;min-width:0;overflow-wrap:break-word;font-size:15px;font-weight:500;color:var(--text)}
 .h-name.done{color:var(--text3);text-decoration:line-through}
 .h-goal{all:unset;box-sizing:border-box;font-size:11px;font-weight:600;padding:3px 10px;border-radius:var(--radius-pill);border:1px dashed var(--border2);color:var(--text3);cursor:pointer;white-space:nowrap}
-.h-goal:hover{border-color:var(--accent);color:var(--accent)}
+.h-goal:hover{border-color:var(--accent);color:var(--accent-d)}
 .h-goal.set{border-style:solid;border-color:var(--accent-mid);color:var(--accent-d);background:var(--accent-dim)}
 .h-goal.done{background:var(--accent);border-color:var(--accent);color:white}
 .h-goalbar{flex:1 1 100%;height:5px;border-radius:3px;background:var(--bg3);overflow:hidden}
@@ -319,7 +320,7 @@ textarea.inp{resize:none;line-height:1.6}
 .cal-cell.both{background:var(--accent)}
 .cal-cell.empty{background:transparent}
 .cal-day{font-size:12px;font-weight:600;color:var(--text2)}
-.has-sp .cal-day{color:var(--peach);color:#b05040}
+.has-sp .cal-day{color:var(--peach-text);color:#b05040}
 .has-go .cal-day{color:var(--accent-d)}
 .both .cal-day{color:white}
 #gcal-table{table-layout:fixed}
@@ -327,8 +328,8 @@ textarea.inp{resize:none;line-height:1.6}
 .cal-dots i{width:5px;height:5px;border-radius:50%;display:block}
 .cal-cell.sel{border-color:var(--text2)}
 .cal-cell.today.sel{border-color:var(--accent)}
-.cal-cnt{font-size:8px;color:var(--text3);margin-top:1px}
-.both .cal-cnt{color:rgba(255,255,255,0.7)}
+.cal-cnt{font-size:10px;color:var(--text3);margin-top:1px}
+.both .cal-cnt{color:#fff}
 .hist-day{margin-bottom:18px}
 .hist-date{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:9px;letter-spacing:.02em}
 .hist-pill{font-size:11px;padding:3px 10px;border-radius:var(--radius-pill);font-weight:600}
@@ -352,7 +353,7 @@ textarea.inp{resize:none;line-height:1.6}
 .fw-saved-item:hover{border-color:var(--accent-mid);box-shadow:0 4px 16px var(--shadow2)}
 .hta-node{position:relative;margin-bottom:4px}
 .hta-row{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:var(--radius-sm);background:var(--bg2);border:1.5px solid var(--border)}
-.hta-id{font-size:11px;font-weight:700;color:var(--accent);font-family:var(--mono);flex-shrink:0;min-width:22px}
+.hta-id{font-size:11px;font-weight:700;color:var(--accent-d);font-family:var(--mono);flex-shrink:0;min-width:22px}
 .hta-text{flex:1;font-size:14px;font-weight:500;color:var(--text)}
 .hta-kids{padding-left:20px;border-left:2px solid var(--border);margin-left:14px;margin-top:4px}
 .hta-add-inline{display:none;gap:6px;padding:5px 10px;align-items:center}
@@ -461,7 +462,7 @@ textarea.inp{resize:none;line-height:1.6}
       <table class="cal-table" id="gcal-table"></table>
       <div style="display:flex;gap:12px;margin-top:12px;flex-wrap:wrap;font-size:11px;color:var(--text3)">
         <div style="display:flex;align-items:center;gap:5px"><span style="display:flex;gap:2px"><i style="width:5px;height:5px;border-radius:50%;background:#6b9e7a"></i><i style="width:5px;height:5px;border-radius:50%;background:#e0805a"></i></span>Goal timeline</div>
-        <div style="display:flex;align-items:center;gap:5px"><span style="color:#d4820c">⚑</span>Deadline</div>
+        <div style="display:flex;align-items:center;gap:5px"><span style="color:#9a5a08">⚑</span>Deadline</div>
         <div style="display:flex;align-items:center;gap:5px"><span style="color:var(--accent-d)">✓</span>Met</div>
         <div style="display:flex;align-items:center;gap:5px"><div style="width:10px;height:10px;border-radius:3px;background:var(--accent-dim);border:1px solid var(--accent-mid)"></div>Completed</div>
         <div style="display:flex;align-items:center;gap:5px"><div style="width:10px;height:10px;border-radius:3px;background:var(--peach-dim);border:1px solid var(--peach-mid)"></div>Sprints</div>
@@ -670,7 +671,7 @@ textarea.inp{resize:none;line-height:1.6}
     <div class="gantt-modal-header">
       <div class="gantt-title" id="gantt-modal-title" style="font-size:11px;letter-spacing:.12em"></div>
       <div style="display:flex;align-items:center;gap:10px">
-        <div style="font-size:8px;font-family:var(--mono);color:var(--text3);text-transform:uppercase;letter-spacing:.08em">◆ deadline &nbsp;― today</div>
+        <div style="font-size:10px;font-family:var(--mono);color:var(--text3);text-transform:uppercase;letter-spacing:.08em">◆ deadline &nbsp;― today</div>
         <button class="gantt-expand-btn" onclick="closeGanttModal()">✕ CLOSE</button>
       </div>
     </div>
@@ -885,16 +886,16 @@ function buildGanttSVG(goal,svgW){
   const span=Math.max(maxD-minD,86400000*7);
   minD=new Date(minD-span*0.04);maxD=new Date(maxD+span*0.04);
   const totalMs=maxD-minD;
-  const LABEL_W=Math.round(svgW*0.22);
+  const LABEL_W=Math.round(svgW*0.3);
   const BAR_X=LABEL_W+4,BAR_W=svgW-LABEL_W-12;
-  const ROW_H=24,HEADER_H=26;
+  const ROW_H=28,HEADER_H=28;
   const SVG_H=HEADER_H+rows.length*ROW_H+14;
   const todayD=parseDt(TODAY);
   const pct=d=>Math.max(0,Math.min(1,(d-minD)/totalMs));
   const bx=d=>BAR_X+pct(d)*BAR_W;
   const nTicks=Math.min(6,Math.floor(svgW/90));
   const ticks=[];for(let i=0;i<=nTicks;i++)ticks.push(new Date(minD.getTime()+totalMs*(i/nTicks)));
-  const barColors=['var(--accent)','rgba(107,158,122,0.6)','rgba(107,158,122,0.35)','rgba(200,200,200,0.2)'];
+  const barColors=['var(--accent)','rgba(107,158,122,0.6)','rgba(107,158,122,0.35)','rgba(85,133,95,0.22)'];
   const getCol=(depth,done)=>done?'rgba(107,158,122,0.6)':barColors[Math.min(depth,3)];
 
   let svg=`<svg width="${svgW}" height="${SVG_H}" viewBox="0 0 ${svgW} ${SVG_H}" xmlns="http://www.w3.org/2000/svg">`;
@@ -902,15 +903,15 @@ function buildGanttSVG(goal,svgW){
   // tick grid + labels
   ticks.forEach(td=>{
     const tx=bx(td);
-    svg+=`<line x1="${tx}" y1="${HEADER_H}" x2="${tx}" y2="${SVG_H-6}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>`;
-    svg+=`<text x="${tx}" y="${HEADER_H-5}" text-anchor="middle" fill="rgba(255,255,255,0.22)" font-size="7.5" font-family="'DM Mono',monospace">${td.toLocaleDateString('en',{month:'short',day:'numeric'})}</text>`;
+    svg+=`<line x1="${tx}" y1="${HEADER_H}" x2="${tx}" y2="${SVG_H-6}" stroke="rgba(0,0,0,0.08)" stroke-width="1"/>`;
+    svg+=`<text x="${tx}" y="${HEADER_H-5}" text-anchor="middle" fill="var(--text3)" font-size="10" font-family="'DM Mono',monospace">${td.toLocaleDateString('en',{month:'short',day:'numeric'})}</text>`;
   });
 
   // today line
   if(todayD>=minD&&todayD<=maxD){
     const tx=bx(todayD);
     svg+=`<line x1="${tx}" y1="${HEADER_H-2}" x2="${tx}" y2="${SVG_H-6}" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.9"/>`;
-    svg+=`<text x="${tx+3}" y="${HEADER_H+9}" fill="var(--accent)" font-size="7" font-family="'DM Mono',monospace" font-weight="700">TODAY</text>`;
+    svg+=`<text x="${tx+3}" y="${HEADER_H+9}" fill="var(--accent-d)" font-size="9" font-family="'DM Mono',monospace" font-weight="700">TODAY</text>`;
   }
 
   // rows
@@ -918,26 +919,26 @@ function buildGanttSVG(goal,svgW){
     const ry=HEADER_H+i*ROW_H,mid=ry+ROW_H/2;
     svg+=`<g class="gantt-row" onclick="ganttRowClick('${r.id}','${goal.id}',${r.depth})"><title>${esc(r.name)} — open</title><rect class="gantt-hit" x="0" y="${ry}" width="${svgW}" height="${ROW_H}" fill="transparent"/>`;
     const indent=r.depth*7;
-    const maxCh=Math.floor((LABEL_W-indent-4)/5.2);
+    const maxCh=Math.floor((LABEL_W-indent-4)/6.4);
     const lbl=r.name.length>maxCh?r.name.slice(0,maxCh-1)+'…':r.name;
-    svg+=`<text x="${indent+2}" y="${mid}" dominant-baseline="middle" fill="${r.depth===0?'rgba(255,255,255,0.92)':'rgba(176,176,176,0.7)'}" font-size="${r.depth===0?9:8}" font-weight="${r.depth===0?'700':'400'}" font-family="'DM Mono',monospace">${esc(lbl)}</text>`;
+    svg+=`<text x="${indent+2}" y="${mid}" dominant-baseline="middle" fill="${r.depth===0?'var(--text)':'var(--text2)'}" font-size="${r.depth===0?11:10}" font-weight="${r.depth===0?'700':'500'}" font-family="'DM Mono',monospace">${esc(lbl)}</text>`;
 
     if(r.start||r.end){
       const sx=r.start?bx(parseDt(r.start)):bx(minD);
       const ex=r.end?bx(parseDt(r.end)):bx(maxD);
-      const bw=Math.max(ex-sx,4),bh=r.depth===0?14:10,by=mid-bh/2;
+      const bw=Math.max(ex-sx,4),bh=r.depth===0?16:12,by=mid-bh/2;
       svg+=`<rect x="${sx}" y="${by}" width="${bw}" height="${bh}" rx="2" fill="${getCol(r.depth,r.done)}"/>`;
-      if(r.start)svg+=`<line x1="${sx}" y1="${by}" x2="${sx}" y2="${by+bh}" stroke="rgba(255,255,255,0.35)" stroke-width="1"/>`;
-      if(r.end){const dx=sx+bw;svg+=`<polygon points="${dx},${mid-5} ${dx+4},${mid} ${dx},${mid+5} ${dx-4},${mid}" fill="${r.depth===0?'var(--accent)':'var(--accent-mid)'}"/>`;}
+      if(r.start)svg+=`<line x1="${sx}" y1="${by}" x2="${sx}" y2="${by+bh}" stroke="rgba(0,0,0,0.3)" stroke-width="1"/>`;
+      if(r.end){const dx=sx+bw;svg+=`<polygon points="${dx},${mid-5} ${dx+4},${mid} ${dx},${mid+5} ${dx-4},${mid}" fill="${r.depth===0?'var(--accent-d)':'var(--accent)'}"/>`;}
       if(bw>28&&r.start&&r.end){
         const days=Math.round((parseDt(r.end)-parseDt(r.start))/86400000);
         const dl=days<7?days+'d':Math.round(days/7)+'w';
-        svg+=`<text x="${sx+bw/2}" y="${mid}" text-anchor="middle" dominant-baseline="middle" fill="rgba(255,255,255,0.75)" font-size="7" font-family="'DM Mono',monospace">${dl}</text>`;
+        svg+=`<text x="${sx+bw/2}" y="${mid}" text-anchor="middle" dominant-baseline="middle" fill="${r.depth===0?'#fff':'var(--text)'}" font-size="9" font-family="'DM Mono',monospace">${dl}</text>`;
       }
     }
-    svg+=`<line x1="0" y1="${ry+ROW_H-1}" x2="${svgW}" y2="${ry+ROW_H-1}" stroke="rgba(255,255,255,0.04)" stroke-width="1"/></g>`;
+    svg+=`<line x1="0" y1="${ry+ROW_H-1}" x2="${svgW}" y2="${ry+ROW_H-1}" stroke="rgba(0,0,0,0.07)" stroke-width="1"/></g>`;
   });
-  svg+=`<rect x="${BAR_X}" y="${SVG_H-6}" width="${BAR_W}" height="1.5" fill="rgba(255,255,255,0.1)"/>`;
+  svg+=`<rect x="${BAR_X}" y="${SVG_H-6}" width="${BAR_W}" height="1.5" fill="rgba(0,0,0,0.14)"/>`;
   svg+=`</svg>`;
   return{svg,svgW,SVG_H};
 }
@@ -947,13 +948,13 @@ function toggleGantt(){
   document.querySelectorAll('.gantt-wrap').forEach(w=>{w.classList.toggle('collapsed',ganttCollapsed);const b=w.querySelector('.gantt-toggle');if(b){b.textContent=ganttCollapsed?'▸':'▾';b.setAttribute('aria-expanded',String(!ganttCollapsed));}});
 }
 function renderGantt(goal){
-  const res=buildGanttSVG(goal,500);
+  const res=buildGanttSVG(goal,560);
   if(!res)return'';
   return`<div class="gantt-wrap${ganttCollapsed?' collapsed':''}">
     <div class="gantt-header">
       <div class="gantt-title" onclick="toggleGantt()" style="cursor:pointer"><button class="gantt-toggle" aria-label="Collapse or expand timeline" aria-expanded="${!ganttCollapsed}">${ganttCollapsed?'▸':'▾'}</button>Timeline &amp; Gantt</div>
       <div class="gantt-extra" style="display:flex;align-items:center;gap:10px">
-        <div style="font-size:8px;font-family:var(--mono);color:var(--text3);text-transform:uppercase;letter-spacing:.08em">◆ deadline &nbsp;― today</div>
+        <div style="font-size:10px;font-family:var(--mono);color:var(--text3);text-transform:uppercase;letter-spacing:.08em">◆ deadline &nbsp;― today</div>
         <button class="gantt-expand-btn" onclick="openGanttModal('${goal.id}')">⤢ EXPAND</button>
       </div>
     </div>
@@ -995,7 +996,7 @@ function fwRenderEditor(){
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
       <button class="btn btn-ghost" onclick="fwClose()">← BACK</button>
       <div style="flex:1;font-size:14px;font-weight:700;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--mono)">${esc(w.title||'UNTITLED')}</div>
-      ${!w.transferred?`<button class="btn btn-green" onclick="fwTransfer('${w.id}')">→ Goals</button>`:`<span style="font-size:10px;color:var(--accent);padding:3px 8px;background:var(--accent-dim);border:1px solid var(--accent-mid);border-radius:2px;font-weight:600">Transferred</span>`}
+      ${!w.transferred?`<button class="btn btn-green" onclick="fwTransfer('${w.id}')">→ Goals</button>`:`<span style="font-size:10px;color:var(--accent-d);padding:3px 8px;background:var(--accent-dim);border:1px solid var(--accent-mid);border-radius:2px;font-weight:600">Transferred</span>`}
     </div>
     <div class="fw-progress"><div class="fw-progress-fill" style="width:${pct}%"></div></div>
     <div class="card" style="margin-bottom:12px">
@@ -1003,35 +1004,35 @@ function fwRenderEditor(){
       <input class="inp" type="text" placeholder="Goal name..." value="${esc(w.title||'')}" oninput="fwSaveField('title',this.value)">
     </div>
     <div class="woop-card w">
-      <div class="woop-letter" style="color:#9b7fff">W</div>
-      <div style="font-size:15px;font-weight:700;color:#9b7fff;margin-bottom:5px">Wish</div>
+      <div class="woop-letter" style="color:var(--lav-text)">W</div>
+      <div style="font-size:15px;font-weight:700;color:var(--lav-text);margin-bottom:5px">Wish</div>
       <div class="woop-hint">What do you want to accomplish? Be specific and ambitious but realistic.</div>
       <div class="woop-example">"I want to launch a personal brand site with 3 articles within 6 weeks."</div>
       <textarea class="inp" rows="3" placeholder="What do you want to achieve?" oninput="fwSaveField('wish',this.value)">${esc(w.wish||'')}</textarea>
     </div>
     <div class="woop-card o1">
-      <div class="woop-letter" style="color:var(--accent)">O</div>
-      <div style="font-size:15px;font-weight:700;color:var(--accent);margin-bottom:5px">Outcome</div>
+      <div class="woop-letter" style="color:var(--accent-d)">O</div>
+      <div style="font-size:15px;font-weight:700;color:var(--accent-d);margin-bottom:5px">Outcome</div>
       <div class="woop-hint">Visualise success vividly. How will things be different?</div>
       <div class="woop-example">"I'll have a public presence that attracts opportunities."</div>
       <textarea class="inp" rows="3" placeholder="What does success look like?" oninput="fwSaveField('outcome',this.value)">${esc(w.outcome||'')}</textarea>
     </div>
     <div class="woop-card o2">
-      <div class="woop-letter" style="color:var(--accent)">O</div>
-      <div style="font-size:15px;font-weight:700;color:var(--accent);margin-bottom:5px">Obstacle</div>
+      <div class="woop-letter" style="color:var(--accent-d)">O</div>
+      <div style="font-size:15px;font-weight:700;color:var(--accent-d);margin-bottom:5px">Obstacle</div>
       <div class="woop-hint">What stands in your way? Focus on internal obstacles.</div>
       <div class="woop-example">"I start without clear done criteria and lose momentum."</div>
       <textarea class="inp" rows="3" placeholder="What might stop you?" oninput="fwSaveField('obstacle',this.value)">${esc(w.obstacle||'')}</textarea>
     </div>
     <div class="woop-card p">
-      <div class="woop-letter" style="color:#f5a623">P</div>
-      <div style="font-size:15px;font-weight:700;color:#f5a623;margin-bottom:5px">Plan</div>
+      <div class="woop-letter" style="color:var(--amber-text)">P</div>
+      <div style="font-size:15px;font-weight:700;color:var(--amber-text);margin-bottom:5px">Plan</div>
       <div class="woop-hint">Why does this matter? Becomes the goal description.</div>
       <textarea class="inp" rows="3" placeholder="Why is this goal important?" oninput="fwSaveField('overview',this.value)">${esc(w.overview||'')}</textarea>
     </div>
     <div class="woop-card plan">
-      <div class="card-label" style="color:var(--accent);margin-bottom:10px">HTA Pipeline</div>
-      <div style="font-size:12px;color:var(--accent);margin-bottom:12px;line-height:1.6;opacity:.85;font-family:var(--mono)">Break your goal into sub-goals. Each leaf = one sprint.</div>
+      <div class="card-label" style="color:var(--accent-d);margin-bottom:10px">HTA Pipeline</div>
+      <div style="font-size:12px;color:var(--accent-d);margin-bottom:12px;line-height:1.6;opacity:.85;font-family:var(--mono)">Break your goal into sub-goals. Each leaf = one sprint.</div>
       <div id="fw-plan-tree">${fwRenderPlanHtml(w)}</div>
       <div class="row" style="margin-top:12px">
         <input class="inp" type="text" id="fw-step-inp" placeholder="Add top-level step..." style="font-size:12px" onkeydown="if(event.key==='Enter')fwAddStep(null)">
@@ -1047,7 +1048,7 @@ function fwRenderPlanHtml(w){if(!w.plan.steps||!w.plan.steps.length)return`<div 
 function fwRenderNode(node,idx,path){
   const myPath=[...path,idx].join('.');const key=myPath.replace(/\./g,'-');const hasC=node.children&&node.children.length>0;
   let h=`<div class="hta-node"><div class="hta-row"><span class="hta-id">${myPath}</span><span class="hta-text">${esc(node.name)}</span>
-    ${node.sprint?`<span style="font-size:9px;padding:2px 6px;border-radius:2px;background:var(--accent);color:white;flex-shrink:0;font-family:var(--mono);font-weight:700">${node.sprint}M</span>`:''}
+    ${node.sprint?`<span style="font-size:10px;padding:2px 6px;border-radius:2px;background:var(--accent);color:white;flex-shrink:0;font-family:var(--mono);font-weight:700">${node.sprint}M</span>`:''}
     <button class="btn btn-ghost btn-xs" onclick="fwShowInline('${myPath}')">+</button>
     <button class="btn btn-danger btn-xs" onclick="fwRemoveStep('${myPath}')">×</button></div>
     <div class="hta-add-inline" id="fwai-${key}">
@@ -1516,17 +1517,17 @@ function renderSprintPanel(){
     <div class="timer-btns"><button class="btn btn-purple" onclick="toggleTimer()">${t.running?'PAUSE':'START'}</button><button class="btn" onclick="resetTimer()">Reset</button></div></div>`;
   }
   const goalData=goals[activeGoalIdx];
-  const obstacle=goalData&&goalData.obstacle?`<div style="font-size:12px;color:var(--accent);margin-bottom:12px;padding:10px 14px;background:var(--accent-dim);border:1px solid var(--accent-mid);border-left:3px solid var(--peach);border-radius:var(--radius-sm);line-height:1.6"><span style="font-weight:600;display:block;margin-bottom:4px">⚠ Obstacle</span><span title="Double-click to edit" onclick="tapItem('obstacle','${goalData.id}',event,()=>{})" style="cursor:text;overflow-wrap:break-word">${esc(goalData.obstacle)}</span></div>`:'';
+  const obstacle=goalData&&goalData.obstacle?`<div style="font-size:12px;color:var(--accent-d);margin-bottom:12px;padding:10px 14px;background:var(--accent-dim);border:1px solid var(--accent-mid);border-left:3px solid var(--peach);border-radius:var(--radius-sm);line-height:1.6"><span style="font-weight:600;display:block;margin-bottom:4px">⚠ Obstacle</span><span title="Double-click to edit" onclick="tapItem('obstacle','${goalData.id}',event,()=>{})" style="cursor:text;overflow-wrap:break-word">${esc(goalData.obstacle)}</span></div>`:'';
   return`<div class="sprint-panel"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
     <div class="card-label" style="margin-bottom:0">Sprint</div>
     <div style="display:flex;align-items:center;gap:6px">
       ${chainHtml}
-      <span class="xp-mult ${multCls}" style="font-size:9px">${multLabel}</span>
+      <span class="xp-mult ${multCls}" style="font-size:10px">${multLabel}</span>
     </div>
   </div>
     <div title="Double-click to rename" onclick="tapItem('step','${node.id}',event,()=>{})" style="font-size:17px;font-weight:700;margin-bottom:12px;color:var(--text);letter-spacing:.02em;overflow-wrap:break-word;cursor:text">${esc(node.name)}</div>
     <div style="background:var(--bg1);border:1px solid var(--border);border-left:3px solid var(--peach);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:12px">
-      <div style="font-size:10px;font-weight:700;color:var(--peach);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px">Blockers</div>
+      <div style="font-size:10px;font-weight:700;color:var(--peach-text);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px">Blockers</div>
       <textarea class="inp" rows="2" placeholder="What's in the way?" style="font-size:12px;padding:6px 8px" oninput="saveNodeText('${node.id}','blockers',this.value)">${esc(node.blockers||'')}</textarea>
     </div>
     ${obstacle}
@@ -1535,10 +1536,10 @@ function renderSprintPanel(){
     ${timerBlock}
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
       <div style="font-size:10px;color:var(--text3);font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase">${t.done} OWN · ${childSp} SUB · ${getDailySprintCount(TODAY)} TODAY</div>
-      ${focusStr>0?`<div style="font-size:9px;color:var(--text3);font-family:var(--mono);letter-spacing:.08em">🔥 ${focusStr}D FOCUS STREAK</div>`:''}
+      ${focusStr>0?`<div style="font-size:10px;color:var(--text3);font-family:var(--mono);letter-spacing:.08em">🔥 ${focusStr}D FOCUS STREAK</div>`:''}
     </div>
     <div class="sq-grid" style="gap:3px">${sqs}</div>
-    ${t.done+childSp>=totalSq?`<div style="font-size:9px;color:var(--text3);margin-top:6px;font-family:var(--mono);letter-spacing:.06em">+ ${t.done+childSp-totalSq+6} more beyond view</div>`:''}
+    ${t.done+childSp>=totalSq?`<div style="font-size:10px;color:var(--text3);margin-top:6px;font-family:var(--mono);letter-spacing:.06em">+ ${t.done+childSp-totalSq+6} more beyond view</div>`:''}
   </div>`;
 }
 
@@ -1656,7 +1657,7 @@ function renderGoalContent(){
   let h=renderGantt(g);
 
   // Daily Focus (universal across goals)
-  h+=`<div class="focus-card"><div class="card-label" style="margin-bottom:8px;color:var(--accent)">Daily Focus <span style="font-weight:400;color:var(--text3)">— ACROSS ALL GOALS · TAP DF ON ANY STEP</span></div>`;
+  h+=`<div class="focus-card"><div class="card-label" style="margin-bottom:8px;color:var(--accent-d)">Daily Focus <span style="font-weight:400;color:var(--text3)">— ACROSS ALL GOALS · TAP DF ON ANY STEP</span></div>`;
   if(focusNodes.length){focusNodes.forEach(({n,gi})=>{const isSel=activeStepId===n.id;const sp=timers[n.id]?timers[n.id].done:0;const otherGoal=gi!==activeGoalIdx?goals[gi]:null;h+=`<div class="focus-item${isSel?' act':''}" onclick="selectFocusItem('${n.id}')">
     <div style="width:6px;height:6px;border-radius:1px;background:${isSel?'var(--accent)':'var(--text4)'};flex-shrink:0"></div>
     <span onclick="event.stopPropagation();tapItem('step','${n.id}',event,()=>selectFocusItem('${n.id}'))" title="Double-click to rename" style="flex:1;min-width:0;overflow-wrap:break-word;font-size:15px;color:${isSel?'var(--accent-d)':'var(--text2)'};font-weight:${isSel?'600':'400'}">${esc(n.name)}${(n.tagIds&&n.tagIds.length)?`<span class="p-tags" style="padding:3px 0 0">${nodeTagChips(n)}</span>`:''}${otherGoal?`<span style="display:block;font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-top:1px">${esc(otherGoal.name)}</span>`:''}</span>
@@ -1671,7 +1672,7 @@ function renderGoalContent(){
   const gdHas=!!(g.startDate||g.deadline);
   h+=`<div class="card" style="margin-bottom:12px">
     <div style="display:flex;align-items:center;justify-content:space-between">
-      <div class="card-label" style="margin-bottom:0">Goal dates${gdHas&&!gdOpen?`<span style="margin-left:8px;font-size:9px;color:var(--accent-d);font-weight:600;font-style:normal">${g.startDate?fmtShort(g.startDate):'?'} → ${g.deadline?fmtShort(g.deadline):'?'}${isOverdue?' ⚠':''}</span>`:''}</div>
+      <div class="card-label" style="margin-bottom:0">Goal dates${gdHas&&!gdOpen?`<span style="margin-left:8px;font-size:10px;color:var(--accent-d);font-weight:600;font-style:normal">${g.startDate?fmtShort(g.startDate):'?'} → ${g.deadline?fmtShort(g.deadline):'?'}${isOverdue?' ⚠':''}</span>`:''}</div>
       <button class="date-toggle${gdOpen?' open':''}${gdHas?' has':''}" onclick="toggleGoalDates('${g.id}')"><i class="timeline-icon">◷</i> <span style="margin-left:2px">DATES</span></button>
     </div>
     <div class="goal-dates-body${gdOpen?' open':''}" id="gd-${g.id}">
@@ -1686,8 +1687,8 @@ function renderGoalContent(){
 
   if(g.wish||g.obstacle){
     h+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-      ${g.wish?`<div style="background:var(--bg1);border:1px solid var(--border);border-left:3px solid #9b7fff;border-radius:var(--radius-sm);padding:12px 14px"><div style="font-size:10px;font-weight:700;color:#9b7fff;text-transform:uppercase;letter-spacing:.12em;margin-bottom:5px;font-family:var(--mono)">Wish</div><div title="Double-click to edit" onclick="tapItem('wish','${g.id}',event,()=>{})" style="font-size:13px;color:var(--text2);line-height:1.5;font-weight:500;cursor:text;overflow-wrap:break-word">${esc(g.wish)}</div></div>`:''}
-      ${g.obstacle?`<div style="background:var(--bg1);border:1px solid var(--border);border-left:3px solid var(--peach);border-radius:var(--radius-sm);padding:12px 14px"><div style="font-size:11px;font-weight:600;color:var(--peach);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">Obstacle</div><div title="Double-click to edit" onclick="tapItem('obstacle','${g.id}',event,()=>{})" style="font-size:13px;color:var(--text2);line-height:1.5;font-weight:500;cursor:text;overflow-wrap:break-word">${esc(g.obstacle)}</div></div>`:''}
+      ${g.wish?`<div style="background:var(--bg1);border:1px solid var(--border);border-left:3px solid #9b7fff;border-radius:var(--radius-sm);padding:12px 14px"><div style="font-size:10px;font-weight:700;color:var(--lav-text);text-transform:uppercase;letter-spacing:.12em;margin-bottom:5px;font-family:var(--mono)">Wish</div><div title="Double-click to edit" onclick="tapItem('wish','${g.id}',event,()=>{})" style="font-size:13px;color:var(--text2);line-height:1.5;font-weight:500;cursor:text;overflow-wrap:break-word">${esc(g.wish)}</div></div>`:''}
+      ${g.obstacle?`<div style="background:var(--bg1);border:1px solid var(--border);border-left:3px solid var(--peach);border-radius:var(--radius-sm);padding:12px 14px"><div style="font-size:11px;font-weight:600;color:var(--peach-text);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">Obstacle</div><div title="Double-click to edit" onclick="tapItem('obstacle','${g.id}',event,()=>{})" style="font-size:13px;color:var(--text2);line-height:1.5;font-weight:500;cursor:text;overflow-wrap:break-word">${esc(g.obstacle)}</div></div>`:''}
     </div>`;
   }
 
@@ -1856,14 +1857,14 @@ function renderHeatmap(){
   let h=`<div style="display:flex;align-items:flex-start">`;
   // Day label column — each label height = CELL+GAP px, top offset = month-label row height (16px) + gap (3px)
   h+=`<div style="display:flex;flex-direction:column;gap:${GAP}px;margin-top:${16+GAP}px;margin-right:4px;flex-shrink:0">`;
-  WD.forEach(l=>h+=`<div style="font-size:8px;color:var(--text3);height:${CELL}px;width:16px;display:flex;align-items:center;font-family:var(--mono);letter-spacing:.04em">${l}</div>`);
+  WD.forEach(l=>h+=`<div style="font-size:10px;color:var(--text3);height:${CELL}px;width:16px;display:flex;align-items:center;font-family:var(--mono);letter-spacing:.04em">${l}</div>`);
   h+=`</div>`;
 
   // Week grid
   h+=`<div style="flex:1;min-width:0">`;
   // Month labels row
   h+=`<div style="display:flex;gap:${GAP}px;margin-bottom:${GAP}px;height:16px">`;
-  mlabels.forEach((lbl,i)=>h+=`<div style="flex:1;min-width:0;font-size:8px;color:${i===PAST?'var(--accent)':'var(--text3)'};overflow:hidden;white-space:nowrap;font-weight:${i===PAST?'700':'400'};line-height:16px">${lbl}</div>`);
+  mlabels.forEach((lbl,i)=>h+=`<div style="flex:1;min-width:0;font-size:10px;color:${i===PAST?'var(--accent)':'var(--text3)'};overflow:hidden;white-space:nowrap;font-weight:${i===PAST?'700':'400'};line-height:16px">${lbl}</div>`);
   h+=`</div>`;
   // Week columns
   h+=`<div style="display:flex;gap:${GAP}px">`;
@@ -1879,13 +1880,13 @@ function renderHeatmap(){
   h+=`</div>`;
   // Today indicator
   h+=`<div style="position:relative;height:14px;margin-top:3px">`;
-  h+=`<div style="position:absolute;left:${Math.round(PAST/TOTAL*100)}%;transform:translateX(-50%);font-size:8px;color:var(--accent-d);font-weight:600;white-space:nowrap">today</div>`;
+  h+=`<div style="position:absolute;left:${Math.round(PAST/TOTAL*100)}%;transform:translateX(-50%);font-size:10px;color:var(--accent-d);font-weight:600;white-space:nowrap">today</div>`;
   h+=`</div></div></div>`;
   // Legend
   h+=`<div style="display:flex;align-items:center;gap:3px;margin-top:6px">`;
-  h+=`<span style="font-size:9px;color:var(--text3);margin-right:2px;font-family:var(--mono);letter-spacing:.06em">LESS</span>`;
+  h+=`<span style="font-size:10px;color:var(--text3);margin-right:2px;font-family:var(--mono);letter-spacing:.06em">LESS</span>`;
   pal.forEach(c=>h+=`<div style="width:10px;height:10px;border-radius:2px;background:${c}"></div>`);
-  h+=`<span style="font-size:9px;color:var(--text3);margin-left:2px;font-family:var(--mono);letter-spacing:.06em">MORE</span></div>`;
+  h+=`<span style="font-size:10px;color:var(--text3);margin-left:2px;font-family:var(--mono);letter-spacing:.06em">MORE</span></div>`;
   wrap.innerHTML=h;
 }
 
@@ -1900,7 +1901,7 @@ function renderCompound(){
   bars.forEach((b,i)=>{const mo=b.d.getMonth();if(mo!==lastMo){tlItems.push({i,lbl:b.d.toLocaleDateString('en',{month:'short'}).toUpperCase()});lastMo=mo;}});
   const barsH=bars.map(b=>{const h=Math.round(b.v/max*100);const col=b.v>=1.5?'var(--accent)':b.v>=1?'rgba(107,158,122,0.35)':'rgba(107,158,122,0.15)';return`<div class="cbar" style="height:${h}%;background:${col}"></div>`;}).join('');
   let tlH=`<div style="position:relative;height:14px;margin-top:5px">`;
-  tlItems.forEach(it=>{const p=Math.round(it.i/89*100);tlH+=`<div style="position:absolute;left:${p}%;transform:translateX(-50%);font-size:8px;color:var(--text3);font-family:var(--mono);white-space:nowrap;letter-spacing:.06em">${it.lbl}</div>`;});
+  tlItems.forEach(it=>{const p=Math.round(it.i/89*100);tlH+=`<div style="position:absolute;left:${p}%;transform:translateX(-50%);font-size:10px;color:var(--text3);font-family:var(--mono);white-space:nowrap;letter-spacing:.06em">${it.lbl}</div>`;});
   tlH+=`</div>`;
   wrap.innerHTML=`<div style="background:var(--bg2);border-radius:3px;padding:12px"><div class="chart-bars">${barsH}</div>${tlH}</div>`;
 }
@@ -1934,7 +1935,7 @@ function gcalStatus(pct,end){
   if(!end)return{txt:'No deadline',col:'var(--text3)'};
   const d=gcalDaysBetween(TODAY,end);
   if(d<0)return{txt:'Overdue '+(-d)+'d',col:'#e05555'};
-  return{txt:d===0?'Due today':d+'d left',col:d<=3?'#d4820c':'var(--text3)'};
+  return{txt:d===0?'Due today':d+'d left',col:d<=3?'#9a5a08':'var(--text3)'};
 }
 function renderGoalCal(){
   const year=goalCalViewYear,month=goalCalViewMonth;
@@ -1964,7 +1965,7 @@ function renderGoalCal(){
     let cls=sp&&go?'both':sp?'has-sp':go?'has-go':'';
     const dots=activeOn(k).slice(0,4).map(({gi})=>`<i style="background:${GCAL_COLORS[gi%GCAL_COLORS.length]}"></i>`).join('');
     let flag='';
-    if(due.length){const allDone=due.every(x=>x.r.done);const over=!allDone&&k<TODAY;flag=`<span style="color:${allDone?'var(--accent-d)':over?'#e05555':'#d4820c'};font-size:9px">${allDone?'✓':'⚑'}</span>`;}
+    if(due.length){const allDone=due.every(x=>x.r.done);const over=!allDone&&k<TODAY;flag=`<span style="color:${allDone?'var(--accent-d)':over?'#e05555':'#9a5a08'};font-size:10px">${allDone?'✓':'⚑'}</span>`;}
     const cnt=(flag||xp)?`<div class="cal-cnt">${flag}${xp?(flag?' ':'')+'+'+xp:''}</div>`:'';
     html+=`<td class="cal-cell${cls?' '+cls:''}${k===TODAY?' today':''}${k===gcalSelDate?' sel':''}" style="cursor:pointer" onclick="selectGoalCalDate('${k}')" title="${k}"><div class="cal-day">${day}</div><div class="cal-dots">${dots}</div>${cnt}</td>`;
     col++;if(col%7===0&&day<daysInMonth)html+=`</tr><tr>`;
@@ -1985,7 +1986,7 @@ function renderGoalCal(){
   const item=(inner,extra,click)=>`<div ${click?`class="gcal-link" onclick="${click}" `:''}style="display:flex;align-items:center;font-size:13px;color:var(--text2);padding:5px 0;border-bottom:1px solid var(--border)">${inner}${extra||''}</div>`;
   let dh=`<div style="display:flex;gap:14px;font-size:12px;color:var(--text3)"><span><b style="color:var(--text)">+${selSp*10+selDone.length*100}</b> XP</span><span><b style="color:var(--text)">${selDone.length}</b> completed</span><span><b style="color:var(--text)">${selSp}</b> sprint${selSp!==1?'s':''}</span></div>`;
   dh+=sect('Completed',selDone.map(h=>{const gi=goalOf(h.id);return item((gi>=0?chip(gi):'')+`<span style="flex:1">${esc(h.name)}</span>`,`<span style="color:var(--accent-d);font-size:12px;font-weight:600">✓ +100</span>`,gi>=0?`openGoalNode('${goals[gi].id}','${h.id}')`:'');}).join(''));
-  dh+=sect('Deadlines',selDue.map(({r,gi})=>{const st=r.done?{txt:'Done',col:'var(--accent-d)'}:sel<TODAY?{txt:'Missed',col:'#e05555'}:{txt:sel===TODAY?'Due today':gcalDaysBetween(TODAY,sel)+'d left',col:'#d4820c'};return item(chip(gi)+`<span style="flex:1${r.done?';text-decoration:line-through;color:var(--text3)':''}">${esc(r.name)}${r.depth>0?`<span style="color:var(--text3);font-size:11px"> · ${esc(goals[gi].name)}</span>`:''}</span>`,`<span style="color:${st.col};font-size:12px;font-weight:600">${st.txt}</span>`,`openGoalNode('${goals[gi].id}','${r.depth>0?r.id:''}')`);}).join(''));
+  dh+=sect('Deadlines',selDue.map(({r,gi})=>{const st=r.done?{txt:'Done',col:'var(--accent-d)'}:sel<TODAY?{txt:'Missed',col:'#e05555'}:{txt:sel===TODAY?'Due today':gcalDaysBetween(TODAY,sel)+'d left',col:'#9a5a08'};return item(chip(gi)+`<span style="flex:1${r.done?';text-decoration:line-through;color:var(--text3)':''}">${esc(r.name)}${r.depth>0?`<span style="color:var(--text3);font-size:11px"> · ${esc(goals[gi].name)}</span>`:''}</span>`,`<span style="color:${st.col};font-size:12px;font-weight:600">${st.txt}</span>`,`openGoalNode('${goals[gi].id}','${r.depth>0?r.id:''}')`);}).join(''));
   dh+=sect('Active timelines',selActive.map(({g,gi})=>{const p=goalProgress(g);return item(chip(gi)+`<span style="flex:1">${esc(g.name)}</span>`,`<span style="color:var(--text3);font-size:12px">${p}%</span>`,`openGoalNode('${g.id}')`);}).join(''));
   if(!selDone.length&&!selDue.length&&!selActive.length&&!selSp)dh+=`<div style="font-size:12px;color:var(--text3);margin-top:10px">Nothing scheduled or logged.</div>`;
   dh+=`<button class="btn btn-ghost btn-xs" style="margin-top:12px" onclick="jumpToGoalCalDate('${sel}')">Open in Log →</button>`;
@@ -2018,14 +2019,14 @@ function renderGoalCal(){
       if(!visible.length)return;
       th+=`<div style="margin-bottom:14px">${head}${visible.map(({r,p,b})=>`<div class="gcal-link" onclick="openGoalNode('${g.id}','${r.depth>0?r.id:''}')" title="Open" style="display:flex;align-items:center;gap:8px;margin-top:4px;padding-left:${r.depth>0?Math.min(r.depth,3)*10:0}px"><div style="width:${r.depth===0?0:84}px;flex-shrink:0;font-size:10px;color:${r.done?'var(--text3)':'var(--text2)'};${r.done?'text-decoration:line-through;':''}overflow:hidden;text-overflow:ellipsis;white-space:nowrap;${r.depth===0?'display:none':''}" title="${esc(r.name)}">${esc(r.name)}</div><div style="flex:1;min-width:0">${track(b)}</div></div>`).join('')}</div>`;
     });
-    const scale=`<div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text3);font-family:var(--mono);margin-bottom:8px"><span>1</span><span>${Math.round(daysInMonth/2)}</span><span>${daysInMonth}</span></div>`;
+    const scale=`<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:8px"><span>1</span><span>${Math.round(daysInMonth/2)}</span><span>${daysInMonth}</span></div>`;
     tl.innerHTML=(goals.length?scale+th+(undated?`<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin:6px 0 8px">No timeline set</div>${undated}`:''):`<div class="empty-state" style="padding:14px 0">No goals yet</div>`)||'';
     if(goals.length&&!th&&!undated)tl.innerHTML=scale+`<div style="font-size:12px;color:var(--text3)">No goal timelines fall in this month.</div>`;
   }
 
   const sumEl=document.getElementById('gcal-summary');
   if(sumEl){
-    const stat=(v,l,c)=>`<div style="background:var(--bg1);border-radius:var(--radius-sm);padding:10px 8px;text-align:center"><div style="font-size:20px;font-weight:700;color:${c||'var(--text)'}">${v}</div><div style="font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">${l}</div></div>`;
+    const stat=(v,l,c)=>`<div style="background:var(--bg1);border-radius:var(--radius-sm);padding:10px 8px;text-align:center"><div style="font-size:20px;font-weight:700;color:${c||'var(--text)'}">${v}</div><div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">${l}</div></div>`;
     sumEl.innerHTML=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">${stat(monthXP,'XP')}${stat(monthGoals,'Completed')}${stat(dueTotal-dueDone,'Deadlines open')}${stat(dueOver,'Overdue',dueOver?'#e05555':'')}</div><div style="font-size:11px;color:var(--text3);margin-top:8px">${monthSprints} sprint${monthSprints!==1?'s':''} · ${dueDone}/${dueTotal} deadlines met</div>`;
   }
 }
@@ -2072,7 +2073,7 @@ function renderHistory(){
         <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px">${name}</div>
         <div style="height:7px;background:var(--bg3);border-radius:var(--radius-pill);overflow:hidden"><div style="height:100%;width:${pct}%;background:var(--accent);border-radius:var(--radius-pill);transition:width .5s"></div></div>
       </div>
-      <div style="font-size:11px;color:var(--text3);text-align:right;font-family:var(--mono)">${cur}<br><span style="font-size:9px">/${needed}</span></div>
+      <div style="font-size:11px;color:var(--text3);text-align:right;font-family:var(--mono)">${cur}<br><span style="font-size:10px">/${needed}</span></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
       <div style="background:var(--bg1);border-radius:var(--radius-sm);padding:10px 12px;text-align:center">
@@ -2090,7 +2091,7 @@ function renderHistory(){
     </div>
     <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
       ${mult>1?`<span style="font-size:11px;font-weight:600;padding:4px 12px;border-radius:var(--radius-pill);background:var(--sand-dim);color:#b07030;border:1px solid var(--sand)">×${mult} multiplier active</span>`:''}
-      ${focusStr>0?`<span style="font-size:11px;font-weight:600;padding:4px 12px;border-radius:var(--radius-pill);background:var(--sky-dim);color:#5090b0;border:1px solid rgba(168,196,212,0.4)">🔥 ${focusStr}d focus streak</span>`:''}
+      ${focusStr>0?`<span style="font-size:11px;font-weight:600;padding:4px 12px;border-radius:var(--radius-pill);background:var(--sky-dim);color:var(--sky-text);border:1px solid rgba(168,196,212,0.4)">🔥 ${focusStr}d focus streak</span>`:''}
     </div>
   </div>`;
 
@@ -2118,10 +2119,10 @@ function renderHistory(){
 // ── WHEEL ─────────────────────────────────────────
 const WHEEL_ALL=[
   {name:'T1',color:'#f5d020',textColor:'#5a4a00',weight:40,reward:'Phone for 10 min'},
-  {name:'T2',color:'#4a90d9',textColor:'#ffffff',weight:30,reward:'Favourite snack'},
-  {name:'T3',color:'#5aaf78',textColor:'#ffffff',weight:20,reward:'Movie / YouTube night'},
-  {name:'T4',color:'#e05555',textColor:'#ffffff',weight:8, reward:'Coffee + dessert / Shopping'},
-  {name:'T5',color:'#d4a017',textColor:'#ffffff',weight:2, reward:'Big purchase / Nice weekend'},
+  {name:'T2',color:'#4a90d9',textColor:'#0e2236',weight:30,reward:'Favourite snack'},
+  {name:'T3',color:'#5aaf78',textColor:'#0e2a18',weight:20,reward:'Movie / YouTube night'},
+  {name:'T4',color:'#e05555',textColor:'#2a0d0d',weight:8, reward:'Coffee + dessert / Shopping'},
+  {name:'T5',color:'#d4a017',textColor:'#2f2200',weight:2, reward:'Big purchase / Nice weekend'},
 ];
 const WHEEL_PINS=[
   {id:'yellow',label:'Yellow pin',pinColor:'#f5d020',pinBorder:'#b09800',eligible:['T1'],desc:'Only T1 available'},
@@ -2169,7 +2170,7 @@ function wheelDraw(offset){
       ctx.save();ctx.translate(cx,cy);ctx.rotate(mid);
       const lr=R*(arc.span>0.8?0.52:0.63);
       ctx.textAlign='center';ctx.textBaseline='middle';ctx.globalAlpha=isActive?1:0.35;
-      ctx.fillStyle=isActive?arc.textColor:'#666';
+      ctx.fillStyle=isActive?arc.textColor:'#4a4a45';
       ctx.font=`bold ${Math.max(11,Math.min(18,R*arc.span*0.44))}px 'DM Sans',sans-serif`;
       ctx.fillText(arc.name,lr,0);
       if(arc.span>0.32&&isActive){ctx.font=`${Math.max(9,Math.min(12,R*arc.span*0.28))}px 'DM Mono',monospace`;ctx.globalAlpha=0.7;ctx.fillText(arc.weight+'%',lr,Math.max(11,R*arc.span*0.18));}
@@ -2297,7 +2298,7 @@ function wheelTableRender(){
       <input style="${inpBase};font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text3)" value="${esc(col)}"
         oninput="wheelTableEditCol(${i},this.value)"
         placeholder="Header">
-      ${t.cols.length>1?`<button onclick="wheelTableRemoveCol(${i})" style="position:absolute;top:2px;right:2px;background:none;border:none;cursor:pointer;color:var(--text4);font-size:10px;line-height:1;padding:1px 3px" title="Remove column">x</button>`:''}
+      ${t.cols.length>1?`<button onclick="wheelTableRemoveCol(${i})" style="position:absolute;top:2px;right:2px;background:none;border:none;cursor:pointer;color:var(--text2);font-size:11px;line-height:1;padding:1px 3px" title="Remove column">x</button>`:''}
     </th>`;
   });
   h+='<th style="width:28px"></th></tr></thead><tbody>';
@@ -2306,7 +2307,7 @@ function wheelTableRender(){
     row.forEach((cell,ci)=>{
       h+=`<td style="${tdStyle}"><input style="${inpBase}" value="${esc(cell)}" oninput="wheelTableEditCell(${ri},${ci},this.value)" placeholder="-"></td>`;
     });
-    h+=`<td style="${tdStyle};text-align:center">${t.rows.length>1?`<button onclick="wheelTableRemoveRow(${ri})" style="background:none;border:none;cursor:pointer;color:var(--text4);font-size:11px;line-height:1;padding:2px" title="Remove row">x</button>`:''}</td>`;
+    h+=`<td style="${tdStyle};text-align:center">${t.rows.length>1?`<button onclick="wheelTableRemoveRow(${ri})" style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:11px;line-height:1;padding:2px" title="Remove row">x</button>`:''}</td>`;
     h+=`</tr>`;
   });
   h+='</tbody></table>';
