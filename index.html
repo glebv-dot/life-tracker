@@ -505,9 +505,9 @@ textarea.inp{resize:none;line-height:1.6}
       <div id="hm-outer" style="overflow-x:auto;scrollbar-width:none"></div>
     </div>
     <div class="card">
-      <div class="card-label">Compound score — 90 days</div>
+      <div class="card-label" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="flex:1">Compound score — 90 days</span><span id="compound-val" style="font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.02em;text-transform:none"></span></div>
       <div id="compound-wrap"></div>
-      <div style="font-size:10px;color:var(--text3);margin-top:8px;font-family:var(--mono);letter-spacing:.08em">+1% PER DAY · −3% PER MISS</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:8px;font-family:var(--mono);letter-spacing:.08em">+1% PER DAY WITH ≥50% DONE · −3% PER MISSED DAY · STARTS WHEN YOU START TRACKING · DASHED LINE = 1.00×</div>
     </div>
   </div>
 </div>
@@ -1797,7 +1797,7 @@ function toggleHabit(i){
   renderHabits();renderHeatmap();renderCompound();renderXPBar();
 }
 function removeHabit(i){habits.splice(i,1);saveAll();renderHabits();renderHeatmap();renderCompound();}
-function addHabit(){const inp=document.getElementById('h-input');const name=inp.value.trim();if(!name)return;habits.push({id:uid(),name,color:'var(--accent)',done:false});inp.value='';saveAll();renderHabits();renderHeatmap();renderCompound();}
+function addHabit(){const inp=document.getElementById('h-input');const name=inp.value.trim();if(!name)return;habits.push({id:uid(),name,color:'var(--accent)',done:false,created:TODAY});inp.value='';saveAll();renderHabits();renderHeatmap();renderCompound();}
 
 function renderHabits(){
   if(inlineEditing)return;
@@ -1920,20 +1920,52 @@ function renderHeatmap(){
   wrap.innerHTML=h;
 }
 
+function habitStartDates(log){
+  const first={};
+  Object.keys(log).sort().forEach(k=>{const day=log[k]||{};Object.keys(day).forEach(id=>{if(day[id]&&!first[id])first[id]=k;});});
+  const out={};
+  habits.forEach(h=>{let st=first[h.id]||TODAY;if(h.created&&h.created<st)st=h.created;out[h.id]=st;});
+  return out;
+}
+function computeCompound(){
+  const log=getHlog(),starts=habitStartDates(log);
+  const base=new Date(TODAY+'T12:00:00');
+  let sc=1,tracked=0,hits=0,misses=0;const bars=[];
+  for(let i=89;i>=0;i--){
+    const d=new Date(base);d.setDate(d.getDate()-i);const k=fmtDate(d);
+    const active=habits.filter(h=>starts[h.id]<=k);
+    if(!active.length){bars.push({v:sc,d,k,pre:true});continue;}
+    tracked++;
+    const done=active.filter(h=>(log[k]||{})[h.id]).length;
+    const hit=done/active.length>=.5;
+    if(hit){sc=Math.min(sc*1.01,3);hits++;}
+    else if(k!==TODAY){sc=Math.max(sc*0.97,.5);misses++;}
+    bars.push({v:sc,d,k,open:k===TODAY&&!hit});
+  }
+  return{bars,score:sc,tracked,hits,misses};
+}
 function renderCompound(){
   const wrap=document.getElementById('compound-wrap');if(!wrap)return;
-  const log=getHlog();const gr=1.01,dr=0.97;
-  let sc=1,bars=[],hasAny=false;
-  for(let i=89;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const k=fmtDate(d);const done=habits.filter(h=>(log[k]||{})[h.id]).length;const pct=habits.length>0?done/habits.length:0;if(pct>0)hasAny=true;sc=pct>=.5?Math.min(sc*gr,3):Math.max(sc*dr,.5);bars.push({v:sc,d:new Date(d)});}
-  if(!hasAny){wrap.innerHTML=`<div class="chart-empty">NO DATA YET</div>`;return;}
-  const max=Math.max(...bars.map(b=>b.v));
+  const valEl=document.getElementById('compound-val');
+  const c=computeCompound();
+  if(!c.hits&&!c.misses){wrap.innerHTML=`<div class="chart-empty">NO DATA YET</div>`;if(valEl)valEl.textContent='';return;}
+  const bars=c.bars;
+  const ceil=Math.max(1.2,...bars.map(b=>b.v));
   const tlItems=[];let lastMo=-1;
   bars.forEach((b,i)=>{const mo=b.d.getMonth();if(mo!==lastMo){tlItems.push({i,lbl:b.d.toLocaleDateString('en',{month:'short'}).toUpperCase()});lastMo=mo;}});
-  const barsH=bars.map(b=>{const h=Math.round(b.v/max*100);const col=b.v>=1.5?'var(--accent)':b.v>=1?'rgba(107,158,122,0.35)':'rgba(107,158,122,0.15)';return`<div class="cbar" style="height:${h}%;background:${col}"></div>`;}).join('');
+  const barsH=bars.map(b=>{
+    const h=Math.max(4,Math.round(b.v/ceil*100));
+    const col=b.pre?'rgba(0,0,0,0.07)':b.v>=1.5?'var(--accent)':b.v>=1?'rgba(79,127,91,0.5)':'rgba(214,116,96,0.65)';
+    const tip=b.pre?b.k+' · not tracking yet':b.k+' · '+b.v.toFixed(2)+'×'+(b.open?' · today still open':'');
+    return`<div class="cbar" title="${tip}" style="height:${h}%;background:${col}${b.open?';opacity:.55':''}"></div>`;
+  }).join('');
+  const baseline=`<div style="position:absolute;left:0;right:0;bottom:${(1/ceil*100).toFixed(1)}%;border-top:1px dashed rgba(0,0,0,0.3);pointer-events:none" title="1.00× baseline"></div>`;
   let tlH=`<div style="position:relative;height:14px;margin-top:5px">`;
   tlItems.forEach(it=>{const p=Math.round(it.i/89*100);tlH+=`<div style="position:absolute;left:${p}%;transform:translateX(-50%);font-size:10px;color:var(--text3);font-family:var(--mono);white-space:nowrap;letter-spacing:.06em">${it.lbl}</div>`;});
   tlH+=`</div>`;
-  wrap.innerHTML=`<div style="background:var(--bg2);border-radius:3px;padding:12px"><div class="chart-bars">${barsH}</div>${tlH}</div>`;
+  wrap.innerHTML=`<div style="background:var(--bg2);border-radius:3px;padding:12px"><div class="chart-bars" style="position:relative">${barsH}${baseline}</div>${tlH}</div>`;
+  const pct=Math.round((c.score-1)*100);
+  if(valEl){valEl.textContent=c.score.toFixed(2)+'× · '+(pct>=0?'+':'')+pct+'%';valEl.style.color=c.score>=1?'var(--accent-d)':'var(--peach-text)';}
 }
 
 // ── GOALS CALENDAR ──────────────────────────────────────
