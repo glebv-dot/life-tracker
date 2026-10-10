@@ -2605,89 +2605,244 @@ window.addEventListener('pagehide',function(){
 });
 restoreTimerState();
 
-  // Supabase Sync
+  // Supabase Sync — per-record rows, content-hash dirty checks, incremental pulls
   (function(){
-    if(location.hostname==='127.0.0.1'||location.hostname==='localhost')return;
+    var TEST=window.__LT_SYNC_TEST||null;
+    if(!TEST&&(location.hostname==='127.0.0.1'||location.hostname==='localhost'))return;
     var S='https://vgurpottnlcixzjmatlz.supabase.co',K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZndXJwb3R0bmxjaXh6am1hdGx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDc2MTMsImV4cCI6MjA5NDc4MzYxM30.60bgWxj79Md4eNZYrfnYEQgUNjQr4SJEK27QcTsoRr0',TN='life_tracker_data',U='default';
+    if(TEST&&TEST.S)S=TEST.S;
     var KEYS=['lt2_goals','lt2_goal_tags','lt2_goal_tag_groups','lt2_goal_sort','lt2_goal_filter','lt2_habits','lt2_timers','lt2_history','lt2_woops','lt2_dur','lt2_wheel_pin','lt2_hlog','lt2_xp','lt2_wheel_table','bp_state','bp_log','bp_sit'];
-    var SLOW={lt2_timers:1,bp_sit:1}; // rewritten every second while a timer runs — sync sparsely
-    var pending={},lastSent={},askedSecret=false;
+    var SPLIT={lt2_goals:1,lt2_hlog:1,lt2_history:1};            // stored one row per record
+    var LEGACY=['lt2_goals','lt2_hlog','lt2_history'];            // old whole-blob rows (read once as a fallback, never written)
+    var DEBOUNCE={lt2_goals:4000,lt2_history:8000,lt2_hlog:3000,lt2_timers:15000,bp_sit:15000};
+    var DEFAULT_DEBOUNCE=2500,TOMB='x',HKEY='lt_sync_hashes',WKEY='lt_sync_wm',VKEY='lt_sync_ver',PULL_GAP=20000;
+    var pending={},lastRaw={},hashes={},wm='',askedSecret=false,lastPull=0,pulling=false,hashSaveT=null;
+    var _set=Storage.prototype.setItem;
+    function lget(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+    function lraw(k,v){try{_set.call(localStorage,k,v);}catch(e){}}
+
+    // ── helpers ──
+    function canon(v){
+      if(v===null||typeof v!=='object')return JSON.stringify(v);
+      if(Array.isArray(v))return '['+v.map(canon).join(',')+']';
+      return '{'+Object.keys(v).filter(function(k){return v[k]!==undefined;}).sort().map(function(k){return JSON.stringify(k)+':'+canon(v[k]);}).join(',')+'}';
+    }
+    function hash(str){
+      var h1=0xdeadbeef,h2=0x41c6ce57,ch;
+      for(var i=0;i<str.length;i++){ch=str.charCodeAt(i);h1=Math.imul(h1^ch,2654435761);h2=Math.imul(h2^ch,1597334677);}
+      h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);
+      h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);
+      return (4294967296*(2097151&h2)+(h1>>>0)).toString(36);
+    }
+    function rowHash(v){return hash(canon(v));}
+    function ownerOf(rk){
+      if(rk==='lt2_goals_order')return 'lt2_goals';
+      var i=rk.indexOf('#');return i>0?rk.slice(0,i):rk;
+    }
+    function isTomb(v){return !!v&&typeof v==='object'&&v.__deleted===true;}
+    function month(e){return String((e&&e.date)||'undated').slice(0,7)||'undated';}
+    function saveHashes(){
+      clearTimeout(hashSaveT);
+      hashSaveT=setTimeout(function(){lraw(HKEY,JSON.stringify(hashes));lraw(WKEY,wm);lraw(VKEY,'2');},400);
+    }
+
+    // ── local blob  <->  per-record rows ──
+    function toRows(k,raw){
+      var v;try{v=JSON.parse(raw);}catch(e){return null;}
+      var o={};
+      if(k==='lt2_goals'&&Array.isArray(v)){
+        var ids=[];v.forEach(function(g){if(g&&g.id){o['lt2_goals#'+g.id]=g;ids.push(g.id);}});
+        o['lt2_goals_order']=ids;return o;
+      }
+      if(k==='lt2_hlog'&&v&&typeof v==='object'&&!Array.isArray(v)){
+        Object.keys(v).forEach(function(d){var day=v[d]||{},t={},n=0;Object.keys(day).forEach(function(h){if(day[h]===true){t[h]=true;n++;}});if(n)o['lt2_hlog#'+d]=t;});
+        return o;
+      }
+      if(k==='lt2_history'&&Array.isArray(v)){
+        var by={};v.forEach(function(e){var m=month(e);(by[m]=by[m]||[]).push(e);});
+        Object.keys(by).forEach(function(m){o['lt2_history#'+m]=by[m];});return o;
+      }
+      o[k]=v;return o;
+    }
+    function mergeKey(lk,items){
+      var raw=lget(lk),cur=null;try{cur=raw?JSON.parse(raw):null;}catch(e){}
+      var i;
+      if(lk==='lt2_goals'){
+        var arr=Array.isArray(cur)?cur:[],order=null;
+        items.forEach(function(it){
+          if(it.rk==='lt2_goals_order'){if(Array.isArray(it.val))order=it.val;return;}
+          var id=it.rk.slice('lt2_goals#'.length);
+          i=arr.findIndex(function(g){return g&&g.id===id;});
+          if(it.tomb){if(i>=0)arr.splice(i,1);}else if(i>=0)arr[i]=it.val;else arr.push(it.val);
+        });
+        if(order){var pos={};order.forEach(function(id,n){pos[id]=n;});var rank=function(g){return pos[g.id]!==undefined?pos[g.id]:1e9;};arr=arr.map(function(g,n){return{g:g,n:n};}).sort(function(a,b){return rank(a.g)-rank(b.g)||a.n-b.n;}).map(function(x){return x.g;});}
+        return arr;
+      }
+      if(lk==='lt2_hlog'){
+        var o=cur&&typeof cur==='object'&&!Array.isArray(cur)?cur:{};
+        items.forEach(function(it){var d=it.rk.slice('lt2_hlog#'.length);if(it.tomb)delete o[d];else o[d]=it.val;});
+        return o;
+      }
+      if(lk==='lt2_history'){
+        var h=Array.isArray(cur)?cur:[],touched={};
+        items.forEach(function(it){touched[it.rk.slice('lt2_history#'.length)]=it;});
+        var keep=h.filter(function(e){return !touched[month(e)];}),add=[];
+        Object.keys(touched).forEach(function(m){if(!touched[m].tomb&&Array.isArray(touched[m].val))add=add.concat(touched[m].val);});
+        return keep.concat(add).map(function(e,n){return{e:e,n:n};}).sort(function(a,b){var ma=month(a.e),mb=month(b.e);return ma<mb?-1:ma>mb?1:a.n-b.n;}).map(function(x){return x.e;});
+      }
+      var last=items[items.length-1];
+      return last.tomb?cur:last.val;
+    }
+
+    // ── network ──
     function hdr(){
-      var h={'apikey':K,'Authorization':'Bearer '+K,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'};
-      var sec=null;try{sec=localStorage.getItem('lt_sync_secret');}catch(e){}
-      if(sec)h['x-app-secret']=sec;
+      var h={'apikey':K,'Authorization':'Bearer '+K,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'};
+      var sec=lget('lt_sync_secret');if(sec)h['x-app-secret']=sec;
       return h;
     }
-    function send(k,v,keepalive){
-      var parsed;try{parsed=JSON.parse(v);}catch(e){parsed=v;}
-      fetch(S+'/rest/v1/'+TN+'?on_conflict=user_id,data_key',{method:'POST',headers:hdr(),keepalive:!!keepalive,body:JSON.stringify({user_id:U,data_key:k,data_value:parsed,updated_at:new Date().toISOString()})})
+    function doFetch(url,opts){return (TEST&&TEST.fetch?TEST.fetch:fetch)(url,opts);}
+    function upsert(batch,keepalive){
+      var body=batch.map(function(b){return{user_id:U,data_key:b.rk,data_value:b.val};});
+      var json=JSON.stringify(body);
+      return doFetch(S+'/rest/v1/'+TN+'?on_conflict=user_id,data_key',{method:'POST',headers:hdr(),keepalive:!!keepalive&&json.length<60000,body:json})
         .then(function(r){
-          if(r.ok){lastSent[k]=v;}
-          else if((r.status===401||r.status===403)&&!askedSecret){
+          if(r.ok){batch.forEach(function(b){hashes[b.rk]=b.h;});saveHashes();return true;}
+          if((r.status===401||r.status===403)&&!askedSecret){
             askedSecret=true;
             var s=prompt('Sync is locked. Enter your sync password to enable cross-device sync (Cancel = keep data on this device only):');
-            if(s){try{localStorage.setItem('lt_sync_secret',s);}catch(e){}askedSecret=false;send(k,v);}
+            if(s){lraw('lt_sync_secret',s);askedSecret=false;return upsert(batch,keepalive);}
           }
-        }).catch(function(){});
+          return false;
+        }).catch(function(){return false;});
     }
-    // Debounce + skip unchanged values, so timer ticks don't flood the network
+    function flushKey(k,keepalive){
+      clearTimeout(pending[k]);delete pending[k];
+      var raw=lget(k);if(raw===null)return Promise.resolve();
+      lastRaw[k]=raw;
+      var rows=toRows(k,raw);if(!rows)return Promise.resolve();
+      var batch=[];
+      Object.keys(rows).forEach(function(rk){var h=rowHash(rows[rk]);if(hashes[rk]!==h)batch.push({rk:rk,val:rows[rk],h:h});});
+      if(SPLIT[k])Object.keys(hashes).forEach(function(rk){if(ownerOf(rk)===k&&!(rk in rows)&&hashes[rk]!==TOMB)batch.push({rk:rk,val:{__deleted:true},h:TOMB});});
+      if(!batch.length)return Promise.resolve();
+      var chunks=[];for(var i=0;i<batch.length;i+=100)chunks.push(batch.slice(i,i+100));
+      return chunks.reduce(function(p,c){return p.then(function(){return upsert(c,keepalive);});},Promise.resolve());
+    }
+    function flushAll(keepalive){return Promise.all(KEYS.map(function(k){return flushKey(k,keepalive);}));}
     function queue(k){
       clearTimeout(pending[k]);
-      pending[k]=setTimeout(function(){
-        var cur=null;try{cur=localStorage.getItem(k);}catch(e){}
-        if(cur!==null&&cur!==lastSent[k])send(k,cur);
-      },SLOW[k]?15000:1500);
+      pending[k]=setTimeout(function(){flushKey(k);},DEBOUNCE[k]||DEFAULT_DEBOUNCE);
     }
-    // Patch localStorage.setItem so we catch all writes regardless of how LSS is called
-    var _set=Storage.prototype.setItem;
+
+    // Catch every localStorage write; skip unchanged raw values cheaply, real change detection happens per row via content hashes
     Storage.prototype.setItem=function(k,v){
       _set.call(this,k,v);
-      if(this===localStorage&&KEYS.indexOf(k)!==-1&&v!==lastSent[k])queue(k);
+      if(this===localStorage&&KEYS.indexOf(k)!==-1&&v!==lastRaw[k])queue(k);
     };
-    window.addEventListener('pagehide',function(){
-      KEYS.forEach(function(k){
-        clearTimeout(pending[k]);
-        var cur=null;try{cur=localStorage.getItem(k);}catch(e){}
-        if(cur!==null&&cur!==lastSent[k])send(k,cur,true);
+    function leave(){flushAll(true);}
+    window.addEventListener('pagehide',leave);
+    document.addEventListener('visibilitychange',function(){
+      if(document.hidden)leave();else pull(false);
+    });
+    window.addEventListener('focus',function(){pull(false);});
+    window.addEventListener('online',function(){flushAll();pull(false);});
+
+    // ── pull ──
+    function userBusy(){
+      var a=document.activeElement;
+      if(a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA'||a.tagName==='SELECT'||a.isContentEditable))return true;
+      try{if((typeof inlineEditing!=='undefined'&&inlineEditing)||(typeof tabDrag!=='undefined'&&tabDrag)||(typeof nodeDragState!=='undefined'&&nodeDragState))return true;}catch(e){}
+      return false;
+    }
+    function hydrateApp(){
+      if(TEST&&TEST.onHydrate)TEST.onHydrate();
+      try{
+        goals=LS('lt2_goals')||[];
+        goalTags=LS('lt2_goal_tags')||[];
+        goalTagGroups=LS('lt2_goal_tag_groups')||[];
+        goalSort=LS('lt2_goal_sort')||'manual';
+        goalTagFilter=LS('lt2_goal_filter')||'all';
+        habits=LS('lt2_habits')||habits;
+        timers=LS('lt2_timers')||{};
+        history=LS('lt2_history')||[];
+        woops=LS('lt2_woops')||[];
+        sprintDur=LS('lt2_dur')||5;
+        wheelActivePin=LS('lt2_wheel_pin')||'yellow';
+        const hlog=LS('lt2_hlog')||{};const td=hlog[TODAY]||{};habits.forEach(h=>{h.done=!!(td[h.id]);});
+        if(typeof fwRenderList==='function')fwRenderList();
+        if(typeof renderXPBar==='function')renderXPBar();
+        if(typeof renderGoalTabs==='function')renderGoalTabs();
+        if(typeof renderGoalContent==='function')renderGoalContent();
+        if(typeof renderHabits==='function')renderHabits();
+        if(typeof renderHeatmap==='function')renderHeatmap();
+        if(typeof renderCompound==='function')renderCompound();
+        if(typeof renderCalendar==='function')renderCalendar();
+        if(typeof renderGoalCal==='function')renderGoalCal();
+        if(typeof renderHistory==='function')renderHistory();
+        if(typeof wheelDrawStatic==='function')wheelDrawStatic();
+        if(typeof wheelRenderPins==='function')wheelRenderPins();
+        if(typeof wheelTableRender==='function')wheelTableRender();
+        if(typeof bpRenderAll==='function')bpRenderAll();
+        if(typeof restoreTimerState==='function')restoreTimerState();
+      }catch(e){}
+    }
+    function isoMinus(ts,ms){var t=Date.parse(ts);return isNaN(t)?'':new Date(t-ms).toISOString();}
+    function applyRows(rows,full){
+      var byKey={},changed={},maxTs=wm;
+      rows.forEach(function(r){if(r.updated_at&&r.updated_at>maxTs)maxTs=r.updated_at;});
+      // legacy whole-blob fallback: only when no per-record rows exist for that key yet
+      var present={};rows.forEach(function(r){if(r.data_key.indexOf('#')>0||r.data_key==='lt2_goals_order')present[ownerOf(r.data_key)]=1;});
+      var expanded=[];
+      rows.forEach(function(r){
+        if(LEGACY.indexOf(r.data_key)!==-1){
+          if(present[r.data_key])return;
+          var sub=toRows(r.data_key,JSON.stringify(r.data_value));
+          if(sub)Object.keys(sub).forEach(function(rk){expanded.push({data_key:rk,data_value:sub[rk],legacy:true});});
+          return;
+        }
+        expanded.push(r);
       });
-    });
-    // On load: fetch from Supabase and hydrate, then re-render
-    window.addEventListener('load',function(){
-      fetch(S+'/rest/v1/'+TN+'?user_id=eq.'+U+'&select=data_key,data_value',{headers:hdr()})
-        .then(function(r){return r.json();})
+      expanded.forEach(function(r){
+        var rk=r.data_key,lk=ownerOf(rk),tomb=isTomb(r.data_value),h=tomb?TOMB:rowHash(r.data_value);
+        if(hashes[rk]===h)return;
+        if(pending[lk]!==undefined)return;                    // unsent local edits win; they upload on the next flush
+        hashes[rk]=h;(byKey[lk]=byKey[lk]||[]).push({rk:rk,val:r.data_value,tomb:tomb,legacy:!!r.legacy});changed[lk]=1;
+      });
+      Object.keys(byKey).forEach(function(lk){
+        var next=mergeKey(lk,byKey[lk]);
+        if(next===null||next===undefined)return;
+        var s=JSON.stringify(next);lraw(lk,s);lastRaw[lk]=s;
+        byKey[lk].forEach(function(it){if(it.legacy)delete hashes[it.rk];});   // legacy rows don't exist remotely yet: leave them un-hashed so the next flush uploads them
+      });
+      if(maxTs)wm=maxTs;
+      saveHashes();
+      return Object.keys(changed).length>0;
+    }
+    function pull(force){
+      if(pulling)return Promise.resolve();
+      var now=Date.now();if(!force&&now-lastPull<PULL_GAP)return Promise.resolve();
+      if(userBusy())return Promise.resolve();
+      pulling=true;lastPull=now;
+      var full=!wm||lget(VKEY)!=='2';
+      var q='?user_id=eq.'+U+'&select=data_key,data_value,updated_at&order=updated_at.asc';
+      if(!full)q+='&updated_at=gte.'+encodeURIComponent(isoMinus(wm,2000))+'&data_key=not.in.('+LEGACY.join(',')+')';
+      return doFetch(S+'/rest/v1/'+TN+q,{headers:hdr()})
+        .then(function(r){return r.ok?r.json():null;})
         .then(function(rows){
-          if(!Array.isArray(rows)||rows.length===0)return;
-          rows.forEach(function(r){if(r.data_key){var s=JSON.stringify(r.data_value);try{_set.call(localStorage,r.data_key,s);lastSent[r.data_key]=s;}catch(e){}}});
-          try{
-            goals=LS('lt2_goals')||[];
-            goalTags=LS('lt2_goal_tags')||[];
-            goalTagGroups=LS('lt2_goal_tag_groups')||[];
-            goalSort=LS('lt2_goal_sort')||'manual';
-            goalTagFilter=LS('lt2_goal_filter')||'all';
-            habits=LS('lt2_habits')||habits;
-            timers=LS('lt2_timers')||{};
-            history=LS('lt2_history')||[];
-            woops=LS('lt2_woops')||[];
-            sprintDur=LS('lt2_dur')||5;
-            wheelActivePin=LS('lt2_wheel_pin')||'yellow';
-            const hlog=LS('lt2_hlog')||{};const td=hlog[TODAY]||{};habits.forEach(h=>{h.done=!!(td[h.id]);});
-            if(typeof fwRenderList==='function')fwRenderList();
-            if(typeof renderXPBar==='function')renderXPBar();
-            if(typeof renderGoalTabs==='function')renderGoalTabs();
-            if(typeof renderGoalContent==='function')renderGoalContent();
-            if(typeof renderHabits==='function')renderHabits();
-            if(typeof renderHeatmap==='function')renderHeatmap();
-            if(typeof renderCompound==='function')renderCompound();
-            if(typeof renderCalendar==='function')renderCalendar();
-            if(typeof renderHistory==='function')renderHistory();
-            if(typeof wheelDrawStatic==='function')wheelDrawStatic();
-            if(typeof wheelRenderPins==='function')wheelRenderPins();
-            if(typeof wheelTableRender==='function')wheelTableRender();
-            if(typeof bpRenderAll==='function')bpRenderAll();
-            if(typeof restoreTimerState==='function')restoreTimerState();
-          }catch(e){}
-        }).catch(function(){});
-    });
+          pulling=false;
+          if(!Array.isArray(rows))return;
+          if(userBusy())return;                               // don't swap data under an active edit; retry on next trigger
+          var changed=rows.length?applyRows(rows,full):false;
+          if(changed)hydrateApp();
+          return flushAll();                                  // push anything local-only (first run, offline edits)
+        }).catch(function(){pulling=false;});
+    }
+    if(TEST){TEST.api={toRows:toRows,mergeKey:mergeKey,flushKey:flushKey,flushAll:flushAll,pull:pull,hashes:function(){return hashes;},wm:function(){return wm;},canon:canon,rowHash:rowHash,pendingCount:function(){return Object.keys(pending).length;}};}
+
+    // ── boot ──
+    try{hashes=JSON.parse(lget(HKEY)||'{}')||{};wm=lget(WKEY)||'';}catch(e){hashes={};wm='';}
+    KEYS.forEach(function(k){lastRaw[k]=lget(k);});           // values already on this device count as "seen"; rows are diffed by content hash
+    window.addEventListener('load',function(){pull(true);});
+    if(TEST&&TEST.bootNow)pull(true);
   })();
 </script>
 </body>
