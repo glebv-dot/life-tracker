@@ -710,7 +710,7 @@ const LSS=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}};
 const uid=()=>Math.random().toString(36).slice(2,9);
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const fmtDate=d=>{const x=d||new Date();return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');};
-const TODAY=fmtDate();
+let TODAY=fmtDate();
 const fmtShort=s=>{if(!s)return'';const d=new Date(s+'T12:00:00');return d.toLocaleDateString('en',{month:'short',day:'numeric'});};
 const parseDt=s=>s?new Date(s+'T12:00:00'):null;
 
@@ -1745,9 +1745,26 @@ function toggleTimer(){
 function resetTimer(){const t=timers[activeStepId];if(t){t.running=false;t.sec=t.total;delete t.endAt;}saveAll();renderGoalContent();ensureTimerLoop();}
 
 // ── HABITS ──────────────────────────────────────
+function checkDayRollover(){
+  const now=fmtDate();if(now===TODAY)return;
+  if(inlineEditing||tabDrag||nodeDragState)return;
+  const old=TODAY,oy=calViewYear,om=calViewMonth;
+  TODAY=now;
+  if(habitViewDate===old)habitViewDate=TODAY;
+  const dt=new Date(old+'T12:00:00');
+  if(oy===dt.getFullYear()&&om===dt.getMonth()){const n=new Date();calViewYear=n.getFullYear();calViewMonth=n.getMonth();}
+  const n2=new Date();if(goalCalViewYear===dt.getFullYear()&&goalCalViewMonth===dt.getMonth()){goalCalViewYear=n2.getFullYear();goalCalViewMonth=n2.getMonth();}
+  const td=getHlog()[TODAY]||{};habits.forEach(h=>{h.done=!!td[h.id];});
+  gcalSelDate=null;
+  const active=document.querySelector('.tab.active');if(active)switchTab(active.id.replace('tab-',''));
+}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkDayRollover();});
+window.addEventListener('focus',checkDayRollover);
+window.addEventListener('pageshow',checkDayRollover);
+setInterval(checkDayRollover,60000);
 function getHlog(){return LS('lt2_hlog')||{};}
-function getHabitStreak(hid){const log=getHlog();let s=0,d=new Date();while(true){const k=fmtDate(d);if(log[k]&&log[k][hid])s++;else break;d.setDate(d.getDate()-1);}return s;}
-function calcStreak(){const log=getHlog();let s=0,d=new Date();while(true){const k=fmtDate(d);const done=habits.filter(h=>log[k]&&log[k][h.id]).length;if(done>=Math.max(1,habits.length))s++;else break;d.setDate(d.getDate()-1);}return s;}
+function getHabitStreak(hid){const log=getHlog();let s=0,d=new Date(TODAY+'T12:00:00');if(!(log[TODAY]&&log[TODAY][hid]))d.setDate(d.getDate()-1);while(true){const k=fmtDate(d);if(log[k]&&log[k][hid])s++;else break;d.setDate(d.getDate()-1);}return s;}
+function calcStreak(){const log=getHlog();const all=k=>habits.filter(h=>log[k]&&log[k][h.id]).length>=Math.max(1,habits.length);let s=0,d=new Date(TODAY+'T12:00:00');if(!all(TODAY))d.setDate(d.getDate()-1);while(true){const k=fmtDate(d);if(all(k))s++;else break;d.setDate(d.getDate()-1);}return s;}
 function shiftCalMonth(d){
   calViewMonth+=d;
   if(calViewMonth>11){calViewMonth=0;calViewYear++;}
